@@ -248,7 +248,7 @@
           .then((response) => response.json())
           .then((checkRuns) => {
             const allChecksPassed = checkRuns.check_runs.every(
-              (checkRun) => checkRun.conclusion === "success"
+              (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
             );
             card.className += allChecksPassed ? " blue" : " red";
           })
