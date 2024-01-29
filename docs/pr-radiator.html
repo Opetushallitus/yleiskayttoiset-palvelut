@@ -151,12 +151,27 @@
       <input type="text" id="tokenInput" placeholder="Enter GitHub token" />
       <button onclick="saveToken()">Save Token</button>
     </div>
-    <div class="add-repo">
-      <input type="text" id="repoInput" placeholder="Enter repository name" />
-      <button onclick="addRepo()">Add Repository</button>
-    </div>
     <script>
-      let repos = [];
+      const repos = [
+        "Opetushallitus/cas",
+        "Opetushallitus/cas-oppija",
+        "Opetushallitus/henkilo-ui",
+        "Opetushallitus/henkilotietomuutos",
+        "Opetushallitus/kayttooikeus",
+        "Opetushallitus/koodisto",
+        "Opetushallitus/koodisto-app",
+        "Opetushallitus/login-notifications",
+        "Opetushallitus/oppijanumerorekisteri",
+        "Opetushallitus/organisaatio",
+        "Opetushallitus/osoitepalvelu",
+        "Opetushallitus/palveluvayla",
+        "Opetushallitus/rekisterointi",
+        "Opetushallitus/service-provider",
+        "Opetushallitus/varda-rekisterointi",
+        "Opetushallitus/vtj",
+        "Opetushallitus/vtj-service",
+        "Opetushallitus/yleiskayttoiset-palvelut",
+      ];
       let token = localStorage.getItem("token") || "";
 
       function saveToken() {
@@ -176,44 +191,6 @@
             saveToken();
           }
         });
-
-      document
-        .getElementById("repoInput")
-        .addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            addRepo();
-          }
-        });
-
-      function addRepo() {
-        const repoInput = document.getElementById("repoInput");
-        const repoName = repoInput.value;
-        repoInput.value = "";
-
-        if (repos.length >= 20) {
-          alert("Maximum number of repositories reached");
-          return;
-        }
-
-        fetch(`https://api.github.com/repos/${repoName}/pulls`, {
-          headers: {
-            Authorization: `token ${token}`,
-            Accept: "application/vnd.github.v3+json",
-          },
-        })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Repository not found");
-            }
-            return response.json();
-          })
-          .then((data) => {
-            repos.push(repoName);
-            localStorage.setItem("repos", JSON.stringify(repos));
-            data.forEach((pr) => addPRToCard(repoName, pr));
-          })
-          .catch((error) => alert(error.message));
-      }
 
       function addPRToCard(repoName, pr) {
         const card = document.createElement("div");
@@ -309,10 +286,6 @@
       }
 
       window.onload = function () {
-        const savedRepos = JSON.parse(localStorage.getItem("repos"));
-        if (savedRepos) {
-          repos = savedRepos;
-        }
         updatePRs();
       };
 
