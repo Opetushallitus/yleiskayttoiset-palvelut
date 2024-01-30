@@ -250,7 +250,7 @@
                 const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
 
                 if (existingCard) {
-                  existingCard.className = `.card ${status}`;
+                  existingCard.className = `card ${status}`;
                 } else {
                   addTrunkToCard(repoName, trunk, status)
                 }
