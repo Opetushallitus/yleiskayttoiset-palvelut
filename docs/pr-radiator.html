@@ -243,7 +243,6 @@
         repos.forEach((repoName) => {
           fetchBranches(repoName)
             .then((data) => {
-              console.log(data);
               const trunk = data.find((branch) => (branch.name === "master" || branch.name === "main"));
               return getChecksStatusOfBranch(repoName, trunk).then((status) => {
                 const trunkContainer = document.getElementById("trunkContainer");
@@ -308,15 +307,12 @@
      function addTrunkToCard(repoName, trunk, status) {
         const card = document.createElement("div");
         card.className = `card ${status}`;
-
-        const repoNameElement = document.createElement("div");
-        repoNameElement.setAttribute("data-repo-name", repoName);
-        repoNameElement.innerText = `${repoName}\n\n${trunk.name}`;
-        card.appendChild(repoNameElement);
-
+        card.setAttribute("data-repo-name", repoName);
+        card.innerText = `${repoName}\n\n${trunk.name}`;
         const trunkContainer = document.getElementById("trunkContainer");
         trunkContainer.appendChild(card);
      }
+
       async function fetchPulls(repoName) {
         const PER_PAGE = 30
 
