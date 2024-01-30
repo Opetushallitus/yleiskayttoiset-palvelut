@@ -194,6 +194,14 @@
           }
         });
 
+      function getAge(pr) {
+        try {
+          return `(${Math.floor((Date.now() - new Date(pr.updated_at).getTime()) / (1000 * 60 * 60 * 24))}d)`;
+        } catch (e) {
+          return "";
+        }
+      }
+
       function addPRToCard(repoName, pr) {
         const card = document.createElement("div");
         card.className = "pr-card fade-in";
@@ -201,7 +209,7 @@
 
         const repoNameElement = document.createElement("div");
         repoNameElement.className = "repo-name";
-        repoNameElement.innerText = repoName;
+        repoNameElement.innerText = `${repoName} ${getAge(pr)}`;
         card.appendChild(repoNameElement);
 
         const titleElement = document.createElement("div");
@@ -357,7 +365,7 @@
                 );
 
                 if (existingCard) {
-                  updateCard(existingCard, pr);
+                  updateCard(existingCard, pr, repoName);
                 } else {
                   addPRToCard(repoName, pr);
                 }
@@ -373,7 +381,8 @@
         });
       }
 
-      function updateCard(card, pr) {
+      function updateCard(card, pr, repoName) {
+        card.getElementsByClassName("repo-name")[0].innerText = `${repoName} ${getAge(pr)}`;
         card.getElementsByClassName("title")[0].innerText = pr.title;
         card.getElementsByClassName("branch-name")[0].innerText = pr.head.ref;
       }
