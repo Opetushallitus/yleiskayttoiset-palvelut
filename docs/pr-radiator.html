@@ -206,6 +206,7 @@
         const card = document.createElement("div");
         card.className = "pr-card fade-in";
         card.dataset.prId = pr.id;
+        card.dataset.repoName = repoName;
 
         const repoNameElement = document.createElement("div");
         repoNameElement.className = "repo-name";
@@ -354,9 +355,7 @@
               const existingCards = Array.from(
                 prContainer.getElementsByClassName("pr-card")
               ).filter(
-                (card) =>
-                  card.getElementsByClassName("repo-name")[0].innerText ===
-                  repoName
+                (card) => card.dataset.repoName === repoName
               );
 
               data.forEach((pr) => {
