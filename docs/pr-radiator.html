@@ -121,6 +121,8 @@
           background-color: #c84242;
         }
       }
+      .blue.in-progress { animation: 2s infinite alternate pulseBlue; }
+      .red.in-progress { animation: 2s infinite alternate pulseRed; }
     </style>
   </head>
   <body>
@@ -215,10 +217,12 @@
         )
           .then((response) => response.json())
           .then((checkRuns) => {
+            const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
             const allChecksPassed = checkRuns.check_runs.every(
               (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
             );
             card.className += allChecksPassed ? " blue" : " red";
+            if (inProgress) card.className += " in-progress";
           })
           .catch((error) => {
             card.className += " gray";
@@ -283,10 +287,12 @@
         )
           .then((response) => response.json())
           .then((checkRuns) => {
+            const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
             const allChecksPassed = checkRuns.check_runs.every(
               (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
             );
-            return allChecksPassed ? "blue" : "red";
+            const color = allChecksPassed ? "blue" : "red"
+            return color + (inProgress ? " in-progress" : "")
           })
           .catch((error) => {
             return "gray";
