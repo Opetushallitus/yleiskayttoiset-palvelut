@@ -36,7 +36,7 @@
         background-color: #e0e0e0;
       }
 
-      #prContainer {
+      .cardContainer {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 10px;
@@ -44,7 +44,7 @@
         justify-content: center;
       }
 
-      .pr-card {
+      .card {
         box-sizing: border-box;
         padding: 20px;
         border: none; /* Remove border */
@@ -81,15 +81,15 @@
         font-size: 1em;
       }
 
-      .pr-card.blue {
+      .blue {
         background-color: #428ac8;
       }
 
-      .pr-card.red {
+      .red{
         background-color: #c84242;
       }
 
-      .pr-card.gray {
+      .gray {
         background-color: #808080
       }
 
@@ -143,7 +143,8 @@
     </style>
   </head>
   <body>
-    <div id="prContainer"></div>
+    <div id="trunkContainer" class="cardContainer"></div>
+    <div id="prContainer" class="cardContainer"></div>
     <div class="logout">
       <button onclick="logout()">Logout</button>
     </div>
@@ -237,6 +238,68 @@
         prContainer.appendChild(card);
       }
 
+      function updateTrunks() {
+        repos.forEach((repoName) => {
+          fetch(`https://api.github.com/repos/${repoName}/branches`, {
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: "application/vnd.github.v3+json",
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              const trunk = data.find((branch) => (branch.name === "master" || branch.name === "main"));
+              return getChecksStatusOfBranch(repoName, trunk).then((status) => {
+                const trunkContainer = document.getElementById("trunkContainer");
+                const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
+
+                if (existingCard) {
+                  existingCard.className = `.card ${status}`;
+                } else {
+                  addTrunkToCard(repoName, trunk, status)
+                }
+              })
+            });
+        });
+      }
+
+     function getChecksStatusOfBranch(repoName, branch) {
+        return fetch(
+          `https://api.github.com/repos/${repoName}/commits/${branch.commit.sha}/check-runs`,
+          {
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: "application/vnd.github.v3+json",
+              Accept: "application/vnd.github.antiope-preview+json",
+            },
+          }
+        )
+          .then((response) => response.json())
+          .then((checkRuns) => {
+            const allChecksPassed = checkRuns.check_runs.every(
+              (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
+            );
+            return allChecksPassed ? "blue" : "red";
+          })
+          .catch((error) => {
+            return "gray";
+          });
+     }
+
+     function addTrunkToCard(repoName, trunk, status) {
+        const card = document.createElement("div");
+        card.className = `card ${status}`;
+
+        const repoNameElement = document.createElement("div");
+        repoNameElement.setAttribute("data-repo-name", repoName);
+        repoNameElement.innerText = `${repoName}\n\n${trunk.name}`;
+        card.appendChild(repoNameElement);
+
+        const trunkContainer = document.getElementById("trunkContainer");
+        trunkContainer.appendChild(card);
+     }
+
       function updatePRs() {
         repos.forEach((repoName) => {
           fetch(`https://api.github.com/repos/${repoName}/pulls`, {
@@ -285,11 +348,16 @@
         card.getElementsByClassName("branch-name")[0].innerText = pr.head.ref;
       }
 
-      window.onload = function () {
+      function updateCards() {
+        updateTrunks();
         updatePRs();
+      }
+
+     window.onload = function () {
+        updateCards();
       };
 
-      setInterval(updatePRs, 5000);
+      setInterval(updateCards, 5000);
     </script>
   </body>
 </html>
