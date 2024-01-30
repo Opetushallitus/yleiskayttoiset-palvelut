@@ -240,13 +240,7 @@
 
       function updateTrunks() {
         repos.forEach((repoName) => {
-          fetch(`https://api.github.com/repos/${repoName}/branches`, {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-            },
-          })
-            .then((response) => response.json())
+          fetchBranches(repoName)
             .then((data) => {
               console.log(data);
               const trunk = data.find((branch) => (branch.name === "master" || branch.name === "main"));
@@ -262,6 +256,29 @@
               })
             });
         });
+      }
+
+      async function fetchBranches(repoName) {
+        const PER_PAGE = 30
+
+        function fetchPage(page) {
+          console.log(`Fetching page ${page} of branches for repo ${repoName}`)
+          return fetch(`https://api.github.com/repos/${repoName}/branches?per_page=${PER_PAGE}&page=${page}`, {
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: "application/vnd.github.v3+json",
+            },
+          })
+            .then((response) => response.json())
+        }
+
+        let branches = []
+        for (let i = 1;; ++i) {
+          const next = await fetchPage(i)
+          branches = [...branches, ...next]
+          if (next.length < PER_PAGE) break;
+        }
+        return branches
       }
 
      function getChecksStatusOfBranch(repoName, branch) {
