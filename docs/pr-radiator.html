@@ -317,16 +317,32 @@
         const trunkContainer = document.getElementById("trunkContainer");
         trunkContainer.appendChild(card);
      }
+      async function fetchPulls(repoName) {
+        const PER_PAGE = 30
 
-      function updatePRs() {
-        repos.forEach((repoName) => {
-          fetch(`https://api.github.com/repos/${repoName}/pulls`, {
+        function fetchPage(page) {
+          console.log(`Fetching page ${page} of pulls for repo ${repoName}`)
+          return fetch(`https://api.github.com/repos/${repoName}/pulls?per_page=${PER_PAGE}&page=${page}`, {
             headers: {
               Authorization: `token ${token}`,
               Accept: "application/vnd.github.v3+json",
             },
           })
             .then((response) => response.json())
+        }
+
+        let pulls = [];
+        for (let i = 1;; ++i) {
+          const next = await fetchPage(i)
+          pulls = [...pulls, ...next]
+          if (next.length < PER_PAGE) break
+        }
+        return pulls
+      }
+
+      function updatePRs() {
+        repos.forEach((repoName) => {
+          fetchPulls(repoName)
             .then((data) => {
               data.sort((a, b) => b.number - a.number);
 
