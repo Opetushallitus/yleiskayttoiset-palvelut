@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="refresh" content="120">
+    <title>PR Radiator</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 10px;
+        box-sizing: border-box;
+        font-family: Helvetica, Arial, sans-serif;
+        background-color: #000;
+      }
+
+      .logout,
+      .add-token {
+        display: inline-block;
+        margin: 10px;
+      }
+
+      input[type="text"],
+      button {
+        margin: 5px;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      button {
+        background-color: #f0f0f0; /* Pastel button color */
+        border: none;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #e0e0e0;
+      }
+
+      .cardContainer {
+        padding: 20px;
+        box-sizing: border-box;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card {
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .title {
+        font-size: 2em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+
+      .repo-name,
+      .title,
+      .branch-name {
+        margin-bottom: 10px;
+      }
+
+      @keyframes pulseBlue {
+        0% { background-color: #428ac8 }
+        50% { background-color: #72a2c8 }
+        100% { background-color: #428ac8 }
+      }
+      @keyframes pulseRed {
+        0% { background-color: #c84242 }
+        50% { background-color: #c87272 }
+        100% { background-color: #c84242 }
+      }
+      .card { background-color: #808080 }
+      .card.conclusion-success { background-color: #428ac8; }
+      .card.conclusion-success.status-in-progress { animation: 2s infinite alternate pulseBlue; }
+      .card.conclusion-failure { background-color: #c84242; }
+      .card.conclusion-failure.status-in-progress { animation: 2s infinite alternate pulseRed; }
+      .card.conclusion-cancelled { background-color: #808080 }
+    </style>
+  </head>
+  <body>
+    <div id="prContainer" class="cardContainer"></div>
+    <div class="logout">
+      <button onclick="logout()">Logout</button>
+    </div>
+    <div class="add-token">
+      <input type="text" id="tokenInput" placeholder="Enter GitHub token" />
+      <button onclick="saveToken()">Save Token</button>
+    </div>
+    <script>
+      const repos = [
+        "Opetushallitus/cas",
+        "Opetushallitus/cas-oppija",
+        "Opetushallitus/henkilo-ui",
+        "Opetushallitus/henkilotietomuutos",
+        "Opetushallitus/kayttooikeus",
+        "Opetushallitus/koodisto",
+        "Opetushallitus/koodisto-app",
+        "Opetushallitus/login-notifications",
+        "Opetushallitus/oppijanumerorekisteri",
+        "Opetushallitus/organisaatio",
+        "Opetushallitus/osoitepalvelu",
+        "Opetushallitus/palveluvayla",
+        "Opetushallitus/rekisterointi",
+        "Opetushallitus/service-provider",
+        "Opetushallitus/varda-rekisterointi",
+        "Opetushallitus/vtj",
+        "Opetushallitus/yleiskayttoiset-palvelut",
+      ];
+      let token = localStorage.getItem("token") || "";
+
+      function saveToken() {
+        token = document.getElementById("tokenInput").value;
+        localStorage.setItem("token", token);
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        token = "";
+      }
+
+      document
+        .getElementById("tokenInput")
+        .addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            saveToken();
+          }
+        });
+
+      const runRepoName = run => run.head_repository.full_name
+      const runTitle = run => run.head_commit.message.split("\n")[0]
+      const runAuthor = run => `${run.created_at} ${run.actor.login}`
+
+      function updateCard(card, run) {
+          card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
+          card.getElementsByClassName("title")[0].innerText = runTitle(run)
+          card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
+          card.className = `card status-${run.status} conclusion-${run.conclusion}`
+      }
+
+      function addRunToCard(run) {
+        console.log(run)
+        const repoName = "N/A"
+        const card = document.createElement("div");
+        card.className = "pr-card";
+        card.dataset.runId = run.id;
+
+        const repoNameElement = document.createElement("div");
+        repoNameElement.className = "repo-name";
+        card.appendChild(repoNameElement);
+
+        const titleElement = document.createElement("div");
+        titleElement.className = "title";
+        card.appendChild(titleElement);
+
+        const branchNameElement = document.createElement("div");
+        branchNameElement.className = "branch-name";
+        card.appendChild(branchNameElement);
+        updateCard(card, run)
+        const prContainer = document.getElementById("prContainer");
+        prContainer.appendChild(card);
+      }
+
+      async function fetchActionRuns(repoName) {
+        const PER_PAGE = 10
+
+        function fetchPage(page) {
+          console.log(`Fetching page ${page} of action runs for repo ${repoName}`)
+          return fetch(`https://api.github.com/repos/${repoName}/actions/runs?per_page=${PER_PAGE}&page=${page}`, {
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: "application/vnd.github.v3+json",
+            },
+          })
+            .then((response) => response.json())
+            .then(_ => _.workflow_runs)
+        }
+
+        let results = []
+        for (let i = 1; i <= 1; ++i) { // Fetching only first page because there are a lot of runs!
+          const next = await fetchPage(i)
+          results = [...results, ...next]
+          if (next.length < PER_PAGE) break
+        }
+        return results
+      }
+
+      async function updateActions() {
+        let allRuns = await Promise.all(repos.map(fetchActionRuns))
+        allRuns = allRuns.flat()
+        allRuns.sort((a, b) => b.created_at < a.created_at ? -1 : 1);
+        allRuns.forEach(run => {
+              const container = document.getElementById("prContainer");
+              const existingCards = Array.from(
+                container.getElementsByClassName("pr-card")
+              ).filter(
+                (card) => card.dataset.runId === run.id
+              );
+
+              const existingCard = existingCards.find(
+                (card) => card.dataset.runId === run.id.toString()
+              );
+              if (existingCard) {
+                updateCard(existingCard, run);
+              } else {
+                addRunToCard(run);
+              }
+
+              existingCards
+                .filter(
+                  (card) =>
+                    !data.some((run) => run.id.toString() === card.dataset.runId)
+                )
+                .forEach((card) => prContainer.removeChild(card));
+            });
+      }
+
+      window.onload = function () {
+        updateActions();
+      };
+
+      setInterval(updateActions, 5000);
+    </script>
+  </body>
+</html>
