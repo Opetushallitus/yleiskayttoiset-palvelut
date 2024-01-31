@@ -148,11 +148,6 @@
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
       function updateCard(card, run) {
-          card.querySelector("img").src = run.actor.avatar_url
-          card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
-          card.getElementsByClassName("title")[0].innerText = runTitle(run)
-          card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
-          card.className = `card status-${run.status}`
           fetch(
               `https://api.github.com/repos/${run.head_repository.full_name}/commits/${run.head_sha}/check-runs`,
               {
@@ -165,6 +160,11 @@
           )
               .then((response) => response.json())
               .then(checkRuns => {
+                  card.querySelector("img").src = run.actor.avatar_url
+                  card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
+                  card.getElementsByClassName("title")[0].innerText = runTitle(run)
+                  card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
+                  card.className = `card status-${run.status}`
                   const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
                   const checksCancelled = checkRuns.check_runs.some(
                       (checkRun) => checkRun.conclusion === "cancelled"
