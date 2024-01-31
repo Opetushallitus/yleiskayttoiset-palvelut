@@ -254,7 +254,7 @@
               existingCards
                 .filter(
                   (card) =>
-                    !data.some((run) => run.id.toString() === card.dataset.runId)
+                    !allRuns.some((run) => run.id.toString() === card.dataset.runId)
                 )
                 .forEach((card) => prContainer.removeChild(card));
             });
