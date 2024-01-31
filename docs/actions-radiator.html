@@ -88,11 +88,10 @@
       }
       .card { background-color: #808080 }
       .card.status-in_progress { animation: 2s infinite alternate pulseGray; }
-      .card.conclusion-success { background-color: #428ac8; }
-      .card.conclusion-success.status-in_progress { animation: 2s infinite alternate pulseBlue; }
-      .card.conclusion-failure { background-color: #c84242; }
-      .card.conclusion-failure.status-in_progress { animation: 2s infinite alternate pulseRed; }
-      .card.conclusion-cancelled { background-color: #808080 }
+      .card.checks-passed { background-color: #428ac8; }
+      .card.checks-passed.status-in_progress { animation: 2s infinite alternate pulseBlue; }
+      .card.checks-failed { background-color: #c84242; }
+      .card.checks-failed.status-in_progress { animation: 2s infinite alternate pulseRed; }
     </style>
   </head>
   <body>
@@ -153,7 +152,32 @@
           card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
           card.getElementsByClassName("title")[0].innerText = runTitle(run)
           card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
-          card.className = `card status-${run.status} conclusion-${run.conclusion}`
+          card.className = `card status-${run.status}`
+          fetch(
+              `https://api.github.com/repos/${run.head_repository.full_name}/commits/${run.head_sha}/check-runs`,
+              {
+                  headers: {
+                      Authorization: `token ${token}`,
+                      Accept: "application/vnd.github.v3+json",
+                      Accept: "application/vnd.github.antiope-preview+json",
+                  },
+              }
+          )
+              .then((response) => response.json())
+              .then(checkRuns => {
+                  const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
+                  const checksCancelled = checkRuns.check_runs.some(
+                      (checkRun) => checkRun.conclusion === "cancelled"
+                  );
+                  const allChecksPassed = checkRuns.check_runs.every(
+                      (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
+                  );
+                  if (inProgress) card.className += " in-progress";
+                  card.className +=
+                      checksCancelled ? " checks-cancelled" :
+                      allChecksPassed ? " checks-passed" :
+                      " checks-failed"
+              })
       }
 
       function addRunToCard(run) {
