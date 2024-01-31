@@ -63,6 +63,11 @@
         margin-bottom: 10px;
       }
 
+      @keyframes pulseGray {
+          0% { background-color: #808080 }
+          50% { background-color: #a0a0a0 }
+          100% { background-color: #808080 }
+      }
       @keyframes pulseBlue {
         0% { background-color: #428ac8 }
         50% { background-color: #72a2c8 }
@@ -74,10 +79,11 @@
         100% { background-color: #c84242 }
       }
       .card { background-color: #808080 }
+      .card.status-in_progress { animation: 2s infinite alternate pulseGray; }
       .card.conclusion-success { background-color: #428ac8; }
-      .card.conclusion-success.status-in-progress { animation: 2s infinite alternate pulseBlue; }
+      .card.conclusion-success.status-in_progress { animation: 2s infinite alternate pulseBlue; }
       .card.conclusion-failure { background-color: #c84242; }
-      .card.conclusion-failure.status-in-progress { animation: 2s infinite alternate pulseRed; }
+      .card.conclusion-failure.status-in_progress { animation: 2s infinite alternate pulseRed; }
       .card.conclusion-cancelled { background-color: #808080 }
     </style>
   </head>
