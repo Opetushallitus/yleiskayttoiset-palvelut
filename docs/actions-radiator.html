@@ -237,9 +237,9 @@
         allRuns.forEach(run => {
               const container = document.getElementById("prContainer");
               const existingCards = Array.from(
-                container.getElementsByClassName("pr-card")
+                container.getElementsByClassName("card")
               ).filter(
-                (card) => card.dataset.runId === run.id
+                (card) => card.dataset.runId === run.id.toString()
               );
 
               const existingCard = existingCards.find(
