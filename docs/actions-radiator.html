@@ -36,17 +36,25 @@
       }
 
       .cardContainer {
-        padding: 20px;
+        padding: 32px;
         box-sizing: border-box;
         width: 100%;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 16px;
       }
 
       .card {
-        padding: 20px;
+        display: flex;
+        flex-direction: row;
+          gap: 32px;
+        padding: 32px;
         box-sizing: border-box;
+      }
+
+      .card img {
+          max-height: 80px;
+          width: auto;
       }
 
       .title {
@@ -141,6 +149,7 @@
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
       function updateCard(card, run) {
+          card.querySelector("img").src = run.actor.avatar_url
           card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
           card.getElementsByClassName("title")[0].innerText = runTitle(run)
           card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
@@ -149,11 +158,13 @@
 
       function addRunToCard(run) {
         console.log(run)
-        const repoName = "N/A"
-        const card = document.createElement("div");
-        card.className = "pr-card";
-        card.dataset.runId = run.id;
+        const cardwrapper = document.createElement("div");
+        cardwrapper.className = "pr-card";
+        cardwrapper.dataset.runId = run.id;
+        const img = document.createElement("img");
+        cardwrapper.appendChild(img);
 
+        const card = document.createElement("div");
         const repoNameElement = document.createElement("div");
         repoNameElement.className = "repo-name";
         card.appendChild(repoNameElement);
@@ -165,9 +176,10 @@
         const branchNameElement = document.createElement("div");
         branchNameElement.className = "branch-name";
         card.appendChild(branchNameElement);
-        updateCard(card, run)
+        cardwrapper.appendChild(card)
+        updateCard(cardwrapper, run)
         const prContainer = document.getElementById("prContainer");
-        prContainer.appendChild(card);
+        prContainer.appendChild(cardwrapper);
       }
 
       async function fetchActionRuns(repoName) {
