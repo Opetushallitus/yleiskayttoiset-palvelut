@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script type="text/javascript" src="github.js"></script>
     <meta http-equiv="refresh" content="120">
     <title>PR Radiator</title>
     <style>
@@ -204,17 +205,7 @@
         branchNameElement.innerText = pr.head.ref;
         card.appendChild(branchNameElement);
 
-        fetch(
-          `https://api.github.com/repos/${repoName}/commits/${pr.head.sha}/check-runs`,
-          {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-              Accept: "application/vnd.github.antiope-preview+json",
-            },
-          }
-        )
-          .then((response) => response.json())
+        fetchCheckRuns(repoName, pr.head.sha)
           .then((checkRuns) => {
             const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
             const allChecksPassed = checkRuns.check_runs.every(
@@ -239,7 +230,6 @@
               return getChecksStatusOfBranch(repoName, trunk).then((status) => {
                 const trunkContainer = document.getElementById("trunkContainer");
                 const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
-
                 if (existingCard) {
                   existingCard.className = `card ${status}`;
                 } else {
@@ -250,41 +240,8 @@
         });
       }
 
-      async function fetchBranches(repoName) {
-        const PER_PAGE = 30
-
-        function fetchPage(page) {
-          console.log(`Fetching page ${page} of branches for repo ${repoName}`)
-          return fetch(`https://api.github.com/repos/${repoName}/branches?per_page=${PER_PAGE}&page=${page}`, {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-            },
-          })
-            .then((response) => response.json())
-        }
-
-        let branches = []
-        for (let i = 1;; ++i) {
-          const next = await fetchPage(i)
-          branches = [...branches, ...next]
-          if (next.length < PER_PAGE) break;
-        }
-        return branches
-      }
-
      function getChecksStatusOfBranch(repoName, branch) {
-        return fetch(
-          `https://api.github.com/repos/${repoName}/commits/${branch.commit.sha}/check-runs`,
-          {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-              Accept: "application/vnd.github.antiope-preview+json",
-            },
-          }
-        )
-          .then((response) => response.json())
+        return fetchCheckRuns(repoName, branch.commit.sha)
           .then((checkRuns) => {
             const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
             const allChecksPassed = checkRuns.check_runs.every(
@@ -306,29 +263,6 @@
         const trunkContainer = document.getElementById("trunkContainer");
         trunkContainer.appendChild(card);
      }
-
-      async function fetchPulls(repoName) {
-        const PER_PAGE = 30
-
-        function fetchPage(page) {
-          console.log(`Fetching page ${page} of pulls for repo ${repoName}`)
-          return fetch(`https://api.github.com/repos/${repoName}/pulls?per_page=${PER_PAGE}&page=${page}`, {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-            },
-          })
-            .then((response) => response.json())
-        }
-
-        let pulls = [];
-        for (let i = 1;; ++i) {
-          const next = await fetchPage(i)
-          pulls = [...pulls, ...next]
-          if (next.length < PER_PAGE) break
-        }
-        return pulls
-      }
 
       function updatePRs() {
         repos.forEach((repoName) => {

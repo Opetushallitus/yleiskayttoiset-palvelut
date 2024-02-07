@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script type="text/javascript" src="github.js"></script>
     <meta http-equiv="refresh" content="120">
     <title>PR Radiator</title>
     <style>
@@ -153,17 +154,7 @@
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
       function updateCard(card, run) {
-          fetch(
-              `https://api.github.com/repos/${run.head_repository.full_name}/commits/${run.head_sha}/check-runs`,
-              {
-                  headers: {
-                      Authorization: `token ${token}`,
-                      Accept: "application/vnd.github.v3+json",
-                      Accept: "application/vnd.github.antiope-preview+json",
-                  },
-              }
-          )
-              .then((response) => response.json())
+          fetchCheckRuns(run.head_repository.full_name, run.head_sha)
               .then(checkRuns => {
                   card.querySelector("img").src = run.actor.avatar_url
                   card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
@@ -209,30 +200,6 @@
         updateCard(cardwrapper, run)
         const prContainer = document.getElementById("prContainer");
         prContainer.appendChild(cardwrapper);
-      }
-
-      async function fetchActionRuns(repoName) {
-        const PER_PAGE = 10
-
-        function fetchPage(page) {
-          console.log(`Fetching page ${page} of action runs for repo ${repoName}`)
-          return fetch(`https://api.github.com/repos/${repoName}/actions/runs?per_page=${PER_PAGE}&page=${page}`, {
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github.v3+json",
-            },
-          })
-            .then((response) => response.json())
-            .then(_ => _.workflow_runs)
-        }
-
-        let results = []
-        for (let i = 1; i <= 1; ++i) { // Fetching only first page because there are a lot of runs!
-          const next = await fetchPage(i)
-          results = [...results, ...next]
-          if (next.length < PER_PAGE) break
-        }
-        return results
       }
 
       async function updateActions() {
