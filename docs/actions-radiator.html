@@ -149,7 +149,7 @@
           }
         });
 
-      const runRepoName = run => run.head_repository.full_name
+      const runRepoAndBranchName = run => `${run.head_repository.full_name} - ${run.head_branch}`
       const runTitle = run => run.head_commit.message.split("\n")[0]
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
@@ -157,7 +157,7 @@
           fetchCheckRuns(run.head_repository.full_name, run.head_sha)
               .then(checkRuns => {
                   card.querySelector("img").src = run.actor.avatar_url
-                  card.getElementsByClassName("repo-name")[0].innerText = runRepoName(run)
+                  card.getElementsByClassName("repo-name")[0].innerText = runRepoAndBranchName(run)
                   card.getElementsByClassName("title")[0].innerText = runTitle(run)
                   card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
                   card.className = `card status-${run.status}`
