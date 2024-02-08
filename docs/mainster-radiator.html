@@ -161,7 +161,6 @@
             (checkRun) => !checkRunIsSuccess(checkRun)
         );
         const fails = unique(failedCheckRuns.map(_ => _.name)).join(", ")
-        console.log(fails)
         existingCard.innerText = `${repoName.replace("Opetushallitus/", "")} (${trunk.name})\n\n${fails}`
         existingCard.className = `card ${status}`;
     }
