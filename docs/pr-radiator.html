@@ -127,7 +127,6 @@
     </style>
   </head>
   <body>
-    <div id="trunkContainer" class="cardContainer"></div>
     <div id="prContainer" class="cardContainer"></div>
     <div class="logout">
       <button onclick="logout()">Logout</button>
@@ -222,24 +221,6 @@
         prContainer.appendChild(card);
       }
 
-      function updateTrunks() {
-        repos.forEach((repoName) => {
-          fetchBranches(repoName)
-            .then((data) => {
-              const trunk = data.find((branch) => (branch.name === "master" || branch.name === "main"));
-              return getChecksStatusOfBranch(repoName, trunk).then((status) => {
-                const trunkContainer = document.getElementById("trunkContainer");
-                const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
-                if (existingCard) {
-                  existingCard.className = `card ${status}`;
-                } else {
-                  addTrunkToCard(repoName, trunk, status)
-                }
-              })
-            });
-        });
-      }
-
      function getChecksStatusOfBranch(repoName, branch) {
         return fetchCheckRuns(repoName, branch.commit.sha)
           .then((checkRuns) => {
@@ -253,15 +234,6 @@
           .catch((error) => {
             return "gray";
           });
-     }
-
-     function addTrunkToCard(repoName, trunk, status) {
-        const card = document.createElement("div");
-        card.className = `card ${status}`;
-        card.setAttribute("data-repo-name", repoName);
-        card.innerText = `${repoName}\n\n${trunk.name}`;
-        const trunkContainer = document.getElementById("trunkContainer");
-        trunkContainer.appendChild(card);
      }
 
       function updatePRs() {
@@ -305,16 +277,11 @@
         card.getElementsByClassName("branch-name")[0].innerText = pr.head.ref;
       }
 
-      function updateCards() {
-        updateTrunks();
-        updatePRs();
-      }
-
      window.onload = function () {
-        updateCards();
+        updatePRs();
       };
 
-      setInterval(updateCards, 5000);
+      setInterval(updatePRs, 5000);
     </script>
   </body>
 </html>
