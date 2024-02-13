@@ -168,8 +168,8 @@
         checksHtml = checks.map(check => `<div class="${check.color}">${check.name}</div>`).join("")
         color = checks.some(check => check.color === 'red')
               ? 'red'
-              : (checks.some(check => check.color === 'gray')
-               ? 'gray'
+              : (checks.some(check => check.color === 'in-progress')
+               ? 'in-progress'
                : 'blue')
         existingCard.className = `card ${color}`
         existingCard.innerHTML = `<div>${repoName.split('/')[1]} (${trunk.name})</div><br/>${checksHtml}`;
