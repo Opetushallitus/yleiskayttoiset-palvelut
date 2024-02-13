@@ -1,3 +1,29 @@
+function fetchCheckSuites(repoName, sha) {
+  return fetch(
+    `https://api.github.com/repos/${repoName}/commits/${sha}/check-suites`,
+    {
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        Accept: "application/vnd.github.antiope-preview+json",
+      },
+    }
+  ).then((response) => response.json());
+}
+function fetchCheckRunsForCheckSuite(repoName, checkSuiteId) {
+  const url = `https://api.github.com/repos/${repoName}/check-suites/${checkSuiteId}/check-runs`;
+
+  return fetch(
+    `https://api.github.com/repos/${repoName}/check-suites/${checkSuiteId}/check-runs`,
+    {
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github.v3+json",
+        Accept: "application/vnd.github.antiope-preview+json",
+      },
+    }
+  ).then((response) => response.json());
+}
 function fetchCheckRuns(repoName, sha) {
     return fetch(
         `https://api.github.com/repos/${repoName}/commits/${sha}/check-runs`,

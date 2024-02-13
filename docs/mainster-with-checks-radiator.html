@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <script type="text/javascript" src="github.js"></script>
+  <meta http-equiv="refresh" content="120">
+  <title>Mainster Radiator</title>
+  <style>
+      body {
+          margin: 0;
+          padding: 0;
+          width: 100vw;
+          box-sizing: border-box;
+          font-family: Helvetica, Arial, sans-serif;
+          background-color: #000;
+      }
+
+      input[type="text"],
+      button {
+          margin: 5px;
+          padding: 10px;
+      }
+
+      button {
+          background-color: #f0f0f0; /* Pastel button color */
+          border: none;
+          cursor: pointer;
+      }
+
+      button:hover {
+          background-color: #e0e0e0;
+      }
+
+      .cardContainer {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(700px, 1fr));
+          gap: 10px;
+          padding: 10px;
+          justify-content: center;
+      }
+
+      .card {
+          color: white;
+          box-sizing: border-box;
+          border: none; /* Remove border */
+          border-radius: 2px;
+          box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          width: 100%;
+          word-wrap: break-word;
+          grid-template-areas:
+          "repo ."
+          "title title"
+          "branch branch";
+          font-size: 3em;
+      }
+
+      .card div {
+        padding: 0 10px;
+      }
+
+      .blue {
+          background-color: #428ac8;
+      }
+
+      .red {
+          background-color: #c84242;
+      }
+
+      .gray {
+          background-color: #808080
+      }
+
+      .repo-name,
+      .title,
+      .branch-name {
+          margin-bottom: 10px;
+      }
+
+      @keyframes pulseYellow {
+          0% {
+              background-color: #f0f000;
+          }
+          50% {
+              background-color: #f0f0a0;
+          }
+          100% {
+              background-color: #f0f000;
+          }
+      }
+
+
+      .in-progress {
+          animation: 2s infinite alternate pulseYellow;
+      }
+  </style>
+</head>
+<body>
+  <div id="trunkContainer" class="cardContainer"></div>
+  <div id="prContainer" class="cardContainer"></div>
+  <script>
+    const repos = [
+      "Opetushallitus/cas",
+      "Opetushallitus/cas-oppija",
+      "Opetushallitus/henkilo-ui",
+      "Opetushallitus/henkilotietomuutos",
+      "Opetushallitus/kayttooikeus",
+      "Opetushallitus/koodisto",
+      "Opetushallitus/koodisto-app",
+      "Opetushallitus/login-notifications",
+      "Opetushallitus/oppijanumerorekisteri",
+      "Opetushallitus/organisaatio",
+      "Opetushallitus/osoitepalvelu",
+      "Opetushallitus/palveluvayla",
+      "Opetushallitus/rekisterointi",
+      "Opetushallitus/service-provider",
+      "Opetushallitus/varda-rekisterointi",
+      "Opetushallitus/vtj",
+      "Opetushallitus/yleiskayttoiset-palvelut",
+    ];
+    let token = localStorage.getItem("token");
+
+    const checkRunIsSuccess = checkRun => ["success", "skipped"].includes(checkRun.conclusion);
+
+    function updateTrunks() {
+        repos.forEach((repoName, index) => {
+            fetchBranches(repoName)
+                .then((data) => {
+                    const branchMain = data.find((branch) => branch.name === "main");
+                    const branchMaster = data.find((branch) => branch.name === "master");
+                    const trunk = branchMain ?? branchMaster;
+
+                    return fetchCheckSuites(repoName, trunk.commit.sha).then((result) => {
+                        const trunkContainer = document.getElementById("trunkContainer");
+                        const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
+                        if (existingCard) {
+                            updateCard(existingCard, repoName, trunk, result.check_suites)
+                        } else {
+                            updateCard(createCard(repoName, index), repoName, trunk, result.check_suites);
+                        }
+                    })
+                });
+        });
+    }
+
+    function updateCard(existingCard, repoName, trunk, checkSuites) {
+      Promise.all(checkSuites
+        .map(checkSuite => checkSuite.id)
+        .map(checkSuiteId => {
+          return fetchCheckRunsForCheckSuite(repoName, checkSuiteId)
+            .then((checkRuns) => {
+              return checkRuns.check_runs
+            })
+      })).then(checkRuns => {
+        const checks = checkRuns
+          .flat()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map(checkRun => {
+            const status = checkRun.status !== 'completed'
+                         ? 'in-progress'
+                         : (["success", "skipped"].includes(checkRun.conclusion)
+                          ? 'blue'
+                          : 'red');
+            return {
+              name: checkRun.name,
+              color: status
+            }
+          })
+        checksHtml = checks.map(check => `<div class="${check.color}">${check.name}</div>`).join("")
+        color = checks.some(check => check.color === 'red')
+              ? 'red'
+              : (checks.some(check => check.color === 'gray')
+               ? 'gray'
+               : 'blue')
+        existingCard.className = `card ${color}`
+        existingCard.innerHTML = `<div>${repoName.split('/')[1]} (${trunk.name})</div><br/>${checksHtml}`;
+      })
+    }
+
+  function createCard(repoName, index) {
+        const card = document.createElement("div");
+        card.style.order = index
+        card.setAttribute("data-repo-name", repoName);
+        card.className = `card`;
+        const trunkContainer = document.getElementById("trunkContainer");
+        trunkContainer.appendChild(card);
+        return card;
+    }
+
+    function unique(array) {
+        return [...new Set(array)];
+    }
+
+    window.onload = () => updateTrunks()
+    setInterval(updateTrunks, 5000);
+  </script>
+</body>
+</html>
