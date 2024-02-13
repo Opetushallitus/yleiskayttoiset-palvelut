@@ -172,7 +172,7 @@
                ? 'in-progress'
                : 'blue')
         existingCard.className = `card ${color}`
-        existingCard.innerHTML = `<div>${repoName.split('/')[1]} (${trunk.name})</div><br/>${checksHtml}`;
+        existingCard.innerHTML = `<div>${repoName.split('/')[1]} (${trunk.name})</div>${checksHtml}`;
       })
     }
 
