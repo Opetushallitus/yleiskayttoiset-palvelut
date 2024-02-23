@@ -31,6 +31,8 @@ const PolicyDocument = JSON.stringify({
         "route53:ListResourceRecordSets",
         "route53:GetHostedZoneCount",
         "route53:ListHostedZonesByName",
+        "route53:ListQueryLoggingConfigs",
+        "route53:GetChange",
       ],
       Resource: "*",
     },
