@@ -7,7 +7,7 @@ function main {
   local -r env=$(parse_env_from_script_name)
 
   case "${env}" in
-    "dev" | "qa" | "prod" | "util")
+    "hahtuva" | "dev" | "qa" | "prod" | "util")
       start_ci "${env}"
       ;;
     *)
