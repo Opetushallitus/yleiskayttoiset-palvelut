@@ -6,7 +6,7 @@ source "${repo}/scripts/lib/common-functions.sh"
 function main {
   local -r env=$(parse_env_from_script_name)
   git tag --force "green-${env}"
-  git tag "green-${env}-${date +%s}"
+  git tag "green-${env}-$(date +%s)"
   git push --tags --force origin
 }
 
