@@ -130,7 +130,7 @@ class ContinousDeploymentPipelineStack extends cdk.Stack {
               commands: [
                 `./deploy-${env}.sh`,
                 `git tag green-${env}`,
-                "git push --tags origin $(git branch --show-current)",
+                "git push --tags --force origin $(git branch --show-current)",
               ],
             },
           },
