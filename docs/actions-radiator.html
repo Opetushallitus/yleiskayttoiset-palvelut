@@ -5,12 +5,23 @@
     <meta http-equiv="refresh" content="120">
     <title>PR Radiator</title>
     <style>
+        :root {
+            --background-color: #ffffff;
+            --color-blue: #add8e6;
+            --color-blue-pulse: #72a2c8;
+            --color-yellow: #f0f000;
+            --color-yellow-pulse: #f0f0a0;
+            --color-red: #ffabab;
+            --color-red-pulse: #c87272;
+            --color-gray: #808080;
+            --color-gray-pulse: #a0a0a0;
+        }
       body {
         margin: 0;
         padding: 10px;
         box-sizing: border-box;
         font-family: Helvetica, Arial, sans-serif;
-        background-color: #000;
+        background-color: var(--background-color);
       }
 
       .logout,
@@ -49,58 +60,52 @@
         display: flex;
         flex-direction: row;
           gap: 32px;
-        padding: 32px;
+        padding: 16px;
         box-sizing: border-box;
+        border-radius: 24px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
       }
 
       .card img {
-          max-height: 80px;
+          max-height: 220px;
           width: auto;
+          border-radius: 8px;
+          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
       }
 
-      .title {
-        font-size: 2em;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      .card .card-text-content {
+        display: flex;
+        flex-direction: column;
       }
+      .title { flex-grow: 1 }
 
-      .repo-name {
-        font-size: 4em;
-        color: white;
-        -webkit-text-stroke: 2px black;
-      }
-
-      .repo-name,
-      .title,
-      .branch-name {
-        margin-bottom: 10px;
-      }
+      .repo-name { font-size: 4em }
+      .title { font-size: 2em }
 
       @keyframes pulseYellow {
-          0% { background-color: #f0f000; }
-          50% { background-color: #f0f0a0; }
-          100% { background-color: #f0f000; }
+          0% { background-color: var(--color-yellow) }
+          50% { background-color: var(--color-yellow-pulse) }
+          100% { background-color: var(--color-yellow) }
       }
       @keyframes pulseGray {
-          0% { background-color: #808080 }
-          50% { background-color: #a0a0a0 }
-          100% { background-color: #808080 }
+          0% { background-color: var(--color-gray) }
+          50% { background-color: var(--color-gray-pulse) }
+          100% { background-color: var(--color-gray) }
       }
       @keyframes pulseBlue {
-        0% { background-color: #428ac8 }
-        50% { background-color: #72a2c8 }
-        100% { background-color: #428ac8 }
+        0% { background-color: var(--color-blue) }
+        50% { background-color: var(--color-blue-pulse) }
+        100% { background-color: var(--color-blue) }
       }
       @keyframes pulseRed {
-        0% { background-color: #c84242 }
-        50% { background-color: #c87272 }
-        100% { background-color: #c84242 }
+        0% { background-color: var(--color-red) }
+        50% { background-color: var(--color-red-pulse) }
+        100% { background-color: var(--color-red) }
       }
-      .card { background-color: #808080 }
-      .card.checks-passed { background-color: #428ac8; }
-      .card.checks-failed { background-color: #c84242; }
-      .card.status-in_progress { background-color: #f0f000;  animation: 2s infinite alternate pulseYellow; }
+      .card { background-color: var(--color-gray) }
+      .card.checks-passed { background-color: var(--color-blue) }
+      .card.checks-failed { background-color: var(--color-red) }
+      .card.status-in_progress { background-color: var(--color-yellow); animation: 2s infinite alternate pulseYellow; }
     </style>
   </head>
   <body>
@@ -187,6 +192,7 @@
         cardwrapper.appendChild(img);
 
         const card = document.createElement("div");
+        card.className = "card-text-content";
         const repoNameElement = document.createElement("div");
         repoNameElement.className = "repo-name";
         card.appendChild(repoNameElement);
