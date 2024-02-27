@@ -157,7 +157,7 @@
           }
         });
 
-      const runRepoAndBranchName = run => `${run.head_repository.name} - ${run.head_branch}`
+      const runRepoAndBranchName = run => `${run.head_repository.name} - ${run.head_branch} [ga-${run.run_number}]`
       const runTitle = run => run.head_commit.message.split("\n")[0]
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
