@@ -139,10 +139,10 @@
     }
 
     function updateCard(existingCard, repoName, trunk, checkRuns) {
-        const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
-        const allChecksPassed = checkRuns.check_runs.every(checkRunIsSuccess);
+        const inProgress = checkRuns.some(_ => _.status !== "completed")
+        const allChecksPassed = checkRuns.every(checkRunIsSuccess);
         const status = (allChecksPassed ? "blue" : "red") + (inProgress ? " in-progress" : "")
-        const failedCheckRuns = checkRuns.check_runs.filter(
+        const failedCheckRuns = checkRuns.filter(
             (checkRun) => !checkRunIsSuccess(checkRun)
         );
         const fails = unique(failedCheckRuns.map(_ => _.name)).join(", ")

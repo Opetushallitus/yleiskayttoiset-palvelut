@@ -133,9 +133,9 @@
                         const trunkContainer = document.getElementById("trunkContainer");
                         const existingCard = trunkContainer.querySelector(`[data-repo-name="${repoName}"]`)
                         if (existingCard) {
-                            updateCard(existingCard, repoName, trunk, result.check_suites)
+                            updateCard(existingCard, repoName, trunk, result)
                         } else {
-                            updateCard(createCard(repoName, index), repoName, trunk, result.check_suites);
+                            updateCard(createCard(repoName, index), repoName, trunk, result);
                         }
                     })
                 });
@@ -145,12 +145,9 @@
     function updateCard(existingCard, repoName, trunk, checkSuites) {
       Promise.all(checkSuites
         .map(checkSuite => checkSuite.id)
-        .map(checkSuiteId => {
-          return fetchCheckRunsForCheckSuite(repoName, checkSuiteId)
-            .then((checkRuns) => {
-              return checkRuns.check_runs
-            })
-      })).then(checkRuns => {
+        .map(checkSuiteId =>
+          fetchCheckRunsForCheckSuite(repoName, checkSuiteId)
+      )).then(checkRuns => {
         const checks = checkRuns
           .flat()
           .sort((a, b) => a.name.localeCompare(b.name))

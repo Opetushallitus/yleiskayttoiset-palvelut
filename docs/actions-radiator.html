@@ -169,11 +169,11 @@
                   card.getElementsByClassName("title")[0].innerText = runTitle(run)
                   card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
                   card.className = `card status-${run.status}`
-                  const inProgress = checkRuns.check_runs.some(_ => _.status !== "completed")
-                  const checksCancelled = checkRuns.check_runs.some(
+                  const inProgress = checkRuns.some(_ => _.status !== "completed")
+                  const checksCancelled = checkRuns.some(
                       (checkRun) => checkRun.conclusion === "cancelled"
                   );
-                  const allChecksPassed = checkRuns.check_runs.every(
+                  const allChecksPassed = checkRuns.every(
                       (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
                   );
                   card.className +=
@@ -184,7 +184,6 @@
       }
 
       function addRunToCard(run) {
-        console.log(run)
         const cardwrapper = document.createElement("div");
         cardwrapper.className = "pr-card";
         cardwrapper.dataset.runId = run.id;

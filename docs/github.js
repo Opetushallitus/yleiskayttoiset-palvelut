@@ -1,41 +1,75 @@
-function fetchCheckSuites(repoName, sha) {
-  return fetch(
-    `https://api.github.com/repos/${repoName}/commits/${sha}/check-suites`,
-    {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        Accept: "application/vnd.github.antiope-preview+json",
-      },
+async function fetchCheckSuites(repoName, sha) {
+    const PER_PAGE = 30
+    function fetchPage(page) {
+        return fetch(
+            `https://api.github.com/repos/${repoName}/commits/${sha}/check-suites?per_page=${PER_PAGE}&page=${page}`,
+            {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: "application/vnd.github.v3+json",
+                    Accept: "application/vnd.github.antiope-preview+json",
+                },
+            }
+        ).then((response) => response.json());
     }
-  ).then((response) => response.json());
-}
-function fetchCheckRunsForCheckSuite(repoName, checkSuiteId) {
-  const url = `https://api.github.com/repos/${repoName}/check-suites/${checkSuiteId}/check-runs`;
 
-  return fetch(
-    `https://api.github.com/repos/${repoName}/check-suites/${checkSuiteId}/check-runs`,
-    {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: "application/vnd.github.v3+json",
-        Accept: "application/vnd.github.antiope-preview+json",
-      },
+    let checkSuites = []
+    for (let i = 1;; ++i) {
+        const next = await fetchPage(i)
+        checkSuites = [...checkSuites, ...next.check_suites]
+        if (next.check_suites.length < PER_PAGE) break
     }
-  ).then((response) => response.json());
+    return checkSuites
 }
-function fetchCheckRuns(repoName, sha) {
-    return fetch(
-        `https://api.github.com/repos/${repoName}/commits/${sha}/check-runs`,
-        {
-            headers: {
-                Authorization: `token ${token}`,
-                Accept: "application/vnd.github.v3+json",
-                Accept: "application/vnd.github.antiope-preview+json",
-            },
-        }
-    )
-        .then((response) => response.json())
+async function fetchCheckRunsForCheckSuite(repoName, checkSuiteId) {
+  const PER_PAGE = 30
+
+  function fetchPage(page) {
+      return fetch(
+          `https://api.github.com/repos/${repoName}/check-suites/${checkSuiteId}/check-runs?per_page=${PER_PAGE}&page=${page}`,
+          {
+              headers: {
+                  Authorization: `token ${token}`,
+                  Accept: "application/vnd.github.v3+json",
+                  Accept: "application/vnd.github.antiope-preview+json",
+              },
+          }
+      ).then((response) => response.json());
+  }
+
+  let checkRuns = []
+  for (let i = 1;; ++i) {
+      const next = await fetchPage(i)
+      checkRuns = [...checkRuns, ...next.check_runs]
+      if (next.check_runs.length < PER_PAGE) break;
+  }
+  return checkRuns
+}
+
+async function fetchCheckRuns(repoName, sha) {
+    const PER_PAGE = 30
+
+    function fetchPage(page) {
+        return fetch(
+            `https://api.github.com/repos/${repoName}/commits/${sha}/check-runs?per_page=${PER_PAGE}&page=${page}`,
+            {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: "application/vnd.github.v3+json",
+                    Accept: "application/vnd.github.antiope-preview+json",
+                },
+            }
+        )
+            .then((response) => response.json())
+    }
+
+    let checkRuns = []
+    for (let i = 1;; ++i) {
+        const next = await fetchPage(i)
+        checkRuns = [...checkRuns, ...next.check_runs]
+        if (next.check_runs.length < PER_PAGE) break;
+    }
+    return checkRuns
 }
 async function fetchBranches(repoName) {
     const PER_PAGE = 30
