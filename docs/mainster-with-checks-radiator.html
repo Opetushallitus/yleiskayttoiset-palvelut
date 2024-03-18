@@ -142,14 +142,24 @@
         });
     }
 
+    function latestRuns(checkRuns) {
+        const checkMap = new Map()
+        checkRuns.forEach(checkRun => {
+            const existing = checkMap.get(checkRun.name)
+            if (!existing || existing.id < checkRun.id) {
+                checkMap.set(checkRun.name, checkRun)
+            }
+        })
+        return Array.from(checkMap.values())
+    }
+
     function updateCard(existingCard, repoName, trunk, checkSuites) {
       Promise.all(checkSuites
         .map(checkSuite => checkSuite.id)
         .map(checkSuiteId =>
           fetchCheckRunsForCheckSuite(repoName, checkSuiteId)
       )).then(checkRuns => {
-        const checks = checkRuns
-          .flat()
+        const checks = latestRuns(checkRuns.flat())
           .sort((a, b) => a.name.localeCompare(b.name))
           .map(checkRun => {
             const status = checkRun.status !== 'completed'
