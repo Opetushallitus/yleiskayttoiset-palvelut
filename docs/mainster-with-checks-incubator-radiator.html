@@ -160,7 +160,7 @@
                 fetchCheckRunsForCheckSuite(repoName, checkSuiteId)
             )).then(checkRuns => {
             const checks = latestRuns(checkRuns.flat())
-                .filter(c => !incubatorChecks.includes(c.name))
+                .filter(c => incubatorChecks.includes(c.name))
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map(checkRun => {
                     const status = checkRun.status !== 'completed'
@@ -192,10 +192,6 @@
         const trunkContainer = document.getElementById("trunkContainer");
         trunkContainer.appendChild(card);
         return card;
-    }
-
-    function unique(array) {
-        return [...new Set(array)];
     }
 
     window.onload = () => updateTrunks()
