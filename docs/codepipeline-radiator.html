@@ -1,16 +1,20 @@
 <!DOCTYPE html>
-<html class="no-js" lang="">
+<html>
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="refresh" content="120">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Untitled</title>
-    <meta name="description" content="">
-    <meta name="viewport" content=
-    "width=device-width, initial-scale=1">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <!-- Place favicon.ico in the root directory -->
-
+    <title>AWS Codepipelin radiator</title>
     <style>
+     body {
+         margin: 0;
+         padding: 0;
+         width: 100vw;
+         box-sizing: border-box;
+         font-family: Helvetica, Arial, sans-serif;
+         background-color: #000;
+     }
+
      .card {
          width: 200px;
          height: 100px;
@@ -24,15 +28,29 @@
      }
 
      .card.Failed {
-         background-color: red;
-     }
-
-     .card.InProgress {
-         background-color: #ffffcc;
+         background-color: #c84242;;
      }
 
      .card.Succeeded {
-         background-color: blue;
+         background-color: #428ac8;
+     }
+
+
+     @keyframes pulseYellow {
+         0% {
+             background-color: #f0f000;
+         }
+         50% {
+             background-color: #f0f0a0;
+         }
+         100% {
+             background-color: #f0f000;
+         }
+     }
+
+
+     .InProgress {
+         animation: 2s infinite alternate pulseYellow;
      }
     </style>
     <script src=
