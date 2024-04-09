@@ -5,6 +5,7 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import { Duration } from "aws-cdk-lib";
 
 class CdkApp extends cdk.App {
   constructor() {
@@ -47,6 +48,7 @@ class AlarmStack extends cdk.Stack {
       handler: "alarms-to-slack.handler",
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
+      timeout: Duration.seconds(30),
     });
 
     // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html
