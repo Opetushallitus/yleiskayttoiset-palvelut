@@ -10,16 +10,15 @@ import { Duration } from "aws-cdk-lib";
 class CdkApp extends cdk.App {
   constructor() {
     super();
-    const env = {
-      account: process.env.CDK_DEPLOY_TARGET_ACCOUNT,
-      region: process.env.CDK_DEPLOY_TARGET_REGION,
+    const stackProps = {
+      env: {
+        account: process.env.CDK_DEPLOY_TARGET_ACCOUNT,
+        region: process.env.CDK_DEPLOY_TARGET_REGION,
+      },
     };
-    new DnsStack(this, "DnsStack", {
-      env: env,
-    });
-    new AlarmStack(this, "AlarmStack", {
-      env: env,
-    });
+
+    new DnsStack(this, "DnsStack", stackProps);
+    new AlarmStack(this, "AlarmStack", stackProps);
   }
 }
 
