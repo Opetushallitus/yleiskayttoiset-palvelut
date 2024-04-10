@@ -5,6 +5,7 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import { Duration } from "aws-cdk-lib";
 
 class CdkApp extends cdk.App {
@@ -19,6 +20,7 @@ class CdkApp extends cdk.App {
 
     new DnsStack(this, "DnsStack", stackProps);
     new AlarmStack(this, "AlarmStack", stackProps);
+    new VpcStack(this, "VpcStack", stackProps);
   }
 }
 
@@ -66,6 +68,32 @@ class AlarmStack extends cdk.Stack {
     ).grantRead(alarmsToSlack);
 
     return alarmsToSlack;
+  }
+}
+
+class VpcStack extends cdk.Stack {
+  constructor(scope: constructs.Construct, id: string, props: cdk.StackProps) {
+    super(scope, id, props);
+
+    new ec2.Vpc(this, "Vpc", {
+      vpcName: "vpc",
+      subnetConfiguration: [
+        {
+          name: "Ingress",
+          subnetType: ec2.SubnetType.PUBLIC,
+        },
+        {
+          name: "Application",
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
+        {
+          name: "Database",
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        },
+      ],
+      maxAzs: 3,
+      natGateways: 3,
+    });
   }
 }
 
