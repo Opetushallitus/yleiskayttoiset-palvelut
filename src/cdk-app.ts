@@ -75,7 +75,19 @@ class VpcStack extends cdk.Stack {
   constructor(scope: constructs.Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props);
 
-    new ec2.Vpc(this, "Vpc", {
+    const vpc = this.createVpc();
+    this.createBastionHost(vpc);
+  }
+
+  createBastionHost(vpc: ec2.IVpc) {
+    return new ec2.BastionHostLinux(this, "BastionHost", {
+      instanceName: "bastion-host",
+      vpc,
+    });
+  }
+
+  createVpc() {
+    return new ec2.Vpc(this, "Vpc", {
       vpcName: "vpc",
       subnetConfiguration: [
         {
