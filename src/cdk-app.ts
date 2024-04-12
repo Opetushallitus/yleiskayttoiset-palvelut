@@ -6,6 +6,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as ecs from "aws-cdk-lib/aws-ecs";
 import { Duration } from "aws-cdk-lib";
 
 class CdkApp extends cdk.App {
@@ -21,6 +22,7 @@ class CdkApp extends cdk.App {
     new DnsStack(this, "DnsStack", stackProps);
     new AlarmStack(this, "AlarmStack", stackProps);
     new VpcStack(this, "VpcStack", stackProps);
+    new EcsStack(this, "EcsStack", stackProps);
   }
 }
 
@@ -105,6 +107,22 @@ class VpcStack extends cdk.Stack {
       ],
       maxAzs: 3,
       natGateways: 3,
+    });
+  }
+}
+
+class EcsStack extends cdk.Stack {
+  constructor(scope: constructs.Construct, id: string, props: cdk.StackProps) {
+    super(scope, id, props);
+
+    const vpc = ec2.Vpc.fromLookup(this, "Vpc", { vpcName: "vpc" });
+    this.createEcsCluster(vpc);
+  }
+
+  createEcsCluster(vpc: ec2.IVpc) {
+    return new ecs.Cluster(this, "cluster", {
+      clusterName: "cluster",
+      vpc,
     });
   }
 }
