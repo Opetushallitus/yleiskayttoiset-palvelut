@@ -1,3 +1,5 @@
+const UPDATE_INTERVAL = 10 * 1000
+
 async function fetchCheckSuites(repoName, sha) {
     const PER_PAGE = 30
     function fetchPage(page) {
