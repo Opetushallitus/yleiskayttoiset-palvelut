@@ -19,9 +19,9 @@ const repos = {
 };
 
 function updateTrunks(incubatorFilter) {
-  return () => {
-    Object.keys(repos).forEach((repoName, index) => {
-      fetchBranches(repoName).then((data) => {
+  return async () => {
+    await Promise.all(Object.keys(repos).map(async (repoName, index) => {
+      await fetchBranches(repoName).then((data) => {
         const branchMain = data.find((branch) => branch.name === "main");
         const branchMaster = data.find((branch) => branch.name === "master");
         const trunk = branchMain ?? branchMaster;
@@ -54,7 +54,7 @@ function updateTrunks(incubatorFilter) {
           }
         });
       });
-    });
+    }))
   };
 }
 

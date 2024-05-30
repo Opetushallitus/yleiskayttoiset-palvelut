@@ -106,8 +106,7 @@
     }
 
     const updateFn = updateTrunks(hideNonIncubatorChecks)
-    window.onload = () => updateFn()
-    setInterval(updateFn, UPDATE_INTERVAL);
+    window.onload = () => repeatedly(updateFn)
 </script>
 </body>
 </html>

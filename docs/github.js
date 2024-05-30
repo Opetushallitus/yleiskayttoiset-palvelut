@@ -1,4 +1,13 @@
 const UPDATE_INTERVAL = 10 * 1000
+async function repeatedly(func) {
+    try {
+        console.log("Updating...")
+        await func()
+    } finally {
+        console.log(`Scheduling next update in ${UPDATE_INTERVAL} ms`)
+        setTimeout(() => repeatedly(func), UPDATE_INTERVAL)
+    }
+}
 
 async function fetchCheckSuites(repoName, sha) {
     const PER_PAGE = 30

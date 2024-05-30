@@ -161,8 +161,8 @@
       const runTitle = run => run.head_commit.message.split("\n")[0]
       const runAuthor = run => `${run.created_at} ${run.actor.login}`
 
-      function updateCard(card, run) {
-          fetchCheckRuns(run.head_repository.full_name, run.head_sha)
+      async function updateCard(card, run) {
+          await fetchCheckRuns(run.head_repository.full_name, run.head_sha)
               .then(checkRuns => {
                   card.querySelector("img").src = run.actor.avatar_url
                   card.getElementsByClassName("repo-name")[0].innerText = runRepoAndBranchName(run)
@@ -183,7 +183,7 @@
               })
       }
 
-      function addRunToCard(run) {
+      async function addRunToCard(run) {
         const cardwrapper = document.createElement("div");
         cardwrapper.className = "pr-card";
         cardwrapper.dataset.runId = run.id;
@@ -204,7 +204,7 @@
         branchNameElement.className = "branch-name";
         card.appendChild(branchNameElement);
         cardwrapper.appendChild(card)
-        updateCard(cardwrapper, run)
+        await updateCard(cardwrapper, run)
         const prContainer = document.getElementById("prContainer");
         prContainer.appendChild(cardwrapper);
       }
@@ -213,7 +213,7 @@
         let allRuns = await Promise.all(repos.map(fetchActionRuns))
         allRuns = allRuns.flat()
         allRuns.sort((a, b) => b.created_at < a.created_at ? -1 : 1);
-        allRuns.forEach(run => {
+        for (const run of allRuns) {
               const container = document.getElementById("prContainer");
               const existingCards = Array.from(
                 container.getElementsByClassName("card")
@@ -225,9 +225,9 @@
                 (card) => card.dataset.runId === run.id.toString()
               );
               if (existingCard) {
-                updateCard(existingCard, run);
+                await updateCard(existingCard, run);
               } else {
-                addRunToCard(run);
+                await addRunToCard(run);
               }
 
               existingCards
@@ -236,14 +236,10 @@
                     !allRuns.some((run) => run.id.toString() === card.dataset.runId)
                 )
                 .forEach((card) => prContainer.removeChild(card));
-            });
+            }
       }
 
-      window.onload = function () {
-        updateActions();
-      };
-
-      setInterval(updateActions, UPDATE_INTERVAL);
+      window.onload = () => repeatedly(updateActions)
     </script>
   </body>
 </html>

@@ -118,8 +118,8 @@
     const checkRunIsSuccess = checkRun => ["success", "skipped"].includes(checkRun.conclusion);
 
     function updateTrunks() {
-        repos.forEach((repoName, index) => {
-            fetchBranches(repoName)
+        return Pormise.all(repos.map((repoName, index) => {
+            return fetchBranches(repoName)
                 .then((data) => {
                     const branchMain = data.find((branch) => branch.name === "main");
                     const branchMaster = data.find((branch) => branch.name === "master");
@@ -135,7 +135,7 @@
                         }
                     })
                 });
-        });
+        }));
     }
 
     function updateCard(existingCard, repoName, trunk, checkRuns) {
@@ -164,8 +164,7 @@
         return [...new Set(array)];
     }
 
-    window.onload = () => updateTrunks()
-    setInterval(updateTrunks, UPDATE_INTERVAL);
+    window.onload = () => repeatedly(updateTrunks)
 </script>
 </body>
 </html>
