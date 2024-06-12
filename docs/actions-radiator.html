@@ -77,10 +77,9 @@
         display: flex;
         flex-direction: column;
       }
-      .title { flex-grow: 1 }
 
-      .repo-name { font-size: 4em }
-      .title { font-size: 2em }
+      .card .title { font-size: 4em }
+      .card .commit { font-size: 3em }
 
       @keyframes pulseYellow {
           0% { background-color: var(--color-yellow) }
@@ -157,17 +156,17 @@
           }
         });
 
-      const runRepoAndBranchName = run => `${run.head_repository.name} - ${run.head_branch} [ga-${run.run_number}]`
-      const runTitle = run => run.head_commit.message.split("\n")[0]
-      const runAuthor = run => `${run.created_at} ${run.actor.login}`
+      const runTitle = run => `${run.head_repository.name} [ga-${run.run_number}] ${run.name}@${run.head_branch}`
+      const runCommit = run => run.head_commit.message.split("\n")[0]
+      const CLASS_TITLE = "title"
+      const CLASS_COMMIT_MESSAGE = "commit"
 
       async function updateCard(card, run) {
           await fetchCheckRuns(run.head_repository.full_name, run.head_sha)
               .then(checkRuns => {
                   card.querySelector("img").src = run.actor.avatar_url
-                  card.getElementsByClassName("repo-name")[0].innerText = runRepoAndBranchName(run)
-                  card.getElementsByClassName("title")[0].innerText = runTitle(run)
-                  card.getElementsByClassName("branch-name")[0].innerText = runAuthor(run)
+                  card.getElementsByClassName(CLASS_TITLE)[0].innerText = runTitle(run)
+                  card.getElementsByClassName(CLASS_COMMIT_MESSAGE)[0].innerText = runCommit(run)
                   card.className = `card status-${run.status}`
                   const inProgress = checkRuns.some(_ => _.status !== "completed")
                   const checksCancelled = checkRuns.some(
@@ -184,6 +183,11 @@
       }
 
       async function addRunToCard(run) {
+        const appendChild = (parent, className) => {
+            const child = document.createElement("div")
+            child.className = className
+            parent.appendChild(child)
+        }
         const cardwrapper = document.createElement("div");
         cardwrapper.className = "pr-card";
         cardwrapper.dataset.runId = run.id;
@@ -192,17 +196,9 @@
 
         const card = document.createElement("div");
         card.className = "card-text-content";
-        const repoNameElement = document.createElement("div");
-        repoNameElement.className = "repo-name";
-        card.appendChild(repoNameElement);
+        appendChild(card, CLASS_TITLE)
+        appendChild(card, CLASS_COMMIT_MESSAGE)
 
-        const titleElement = document.createElement("div");
-        titleElement.className = "title";
-        card.appendChild(titleElement);
-
-        const branchNameElement = document.createElement("div");
-        branchNameElement.className = "branch-name";
-        card.appendChild(branchNameElement);
         cardwrapper.appendChild(card)
         await updateCard(cardwrapper, run)
         const prContainer = document.getElementById("prContainer");
