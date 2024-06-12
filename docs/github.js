@@ -82,6 +82,18 @@ async function fetchCheckRuns(repoName, sha) {
     }
     return checkRuns
 }
+
+function latestRuns(checkRuns) {
+    const checkMap = new Map();
+    checkRuns.forEach((checkRun) => {
+        const existing = checkMap.get(checkRun.name);
+        if (!existing || existing.id < checkRun.id) {
+            checkMap.set(checkRun.name, checkRun);
+        }
+    });
+    return Array.from(checkMap.values());
+}
+
 async function fetchBranches(repoName) {
     const PER_PAGE = 30
 

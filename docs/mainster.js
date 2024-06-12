@@ -58,17 +58,6 @@ function updateTrunks(incubatorFilter) {
   };
 }
 
-function latestRuns(checkRuns) {
-  const checkMap = new Map();
-  checkRuns.forEach((checkRun) => {
-    const existing = checkMap.get(checkRun.name);
-    if (!existing || existing.id < checkRun.id) {
-      checkMap.set(checkRun.name, checkRun);
-    }
-  });
-  return Array.from(checkMap.values());
-}
-
 function updateCard(
   existingCard,
   repoName,

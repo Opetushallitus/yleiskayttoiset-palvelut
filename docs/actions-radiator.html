@@ -163,6 +163,7 @@
 
       async function updateCard(card, run) {
           await fetchCheckRuns(run.head_repository.full_name, run.head_sha)
+              .then(latestRuns)
               .then(checkRuns => {
                   card.querySelector("img").src = run.actor.avatar_url
                   card.getElementsByClassName(CLASS_TITLE)[0].innerText = runTitle(run)
