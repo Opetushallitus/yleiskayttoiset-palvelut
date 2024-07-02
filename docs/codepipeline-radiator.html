@@ -66,13 +66,19 @@
          region: region
      });
 
+     function sortableName(x) {
+         return x.replace("Hahtuva", "1").replace("Dev", "2").replace("Qa", "3").replace("Prod", "4");
+     }
      function updatePipelines() {
          let codepipeline = new AWS.CodePipeline();
          codepipeline.listPipelines({}, function(err, data) {
              if (err) {
                  console.log(err, err.stack);
              } else {
-                 data.pipelines.forEach(function(pipeline) {
+                 data.pipelines.toSorted((a, b) => {
+                      return sortableName(a.name).localeCompare(sortableName(b.name));
+                 })
+                 .forEach(function(pipeline) {
                      codepipeline.getPipelineState({name: pipeline.name}, function(err, data) {
                          if (err) {
                              console.log(err, err.stack);
