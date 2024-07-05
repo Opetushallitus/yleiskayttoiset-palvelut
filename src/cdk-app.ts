@@ -89,7 +89,7 @@ class VpcStack extends cdk.Stack {
   }
 
   createVpc() {
-    return new ec2.Vpc(this, "Vpc", {
+    const vpc = new ec2.Vpc(this, "Vpc", {
       vpcName: "vpc",
       subnetConfiguration: [
         {
@@ -108,6 +108,10 @@ class VpcStack extends cdk.Stack {
       maxAzs: 3,
       natGateways: 3,
     });
+    vpc.addGatewayEndpoint("S3Endpoint", {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+    });
+    return vpc;
   }
 }
 

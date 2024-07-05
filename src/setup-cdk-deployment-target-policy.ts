@@ -36,6 +36,11 @@ const PolicyDocument = JSON.stringify({
       ],
       Resource: "*",
     },
+    {
+      Effect: "Allow",
+      Action: ["ec2:*", "iam:*"],
+      Resource: "*"
+    }
   ],
 });
 
