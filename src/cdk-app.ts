@@ -122,6 +122,8 @@ class VpcStack extends cdk.Stack {
   }
 
   private createOutIpAddresses() {
+    // Viestintäpalvelu (ja Organisaatiopalvelun siirtyessä myös Oiva) käyttää
+    // näitä IP-osoitteita rajaamaan pääsyä palvelun rajapintoihin
     return ["OutIpAddress1", "OutIpAddress2", "OutIpAddress3"].map((ip) =>
       this.createIpAddress(ip)
     );
