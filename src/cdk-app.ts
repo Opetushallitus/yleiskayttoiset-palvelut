@@ -89,6 +89,12 @@ class VpcStack extends cdk.Stack {
   }
 
   createVpc() {
+    const outIpAddresses = this.createOutIpAddresses();
+    const natProvider = ec2.NatProvider.gateway({
+      eipAllocationIds: outIpAddresses.map((ip) =>
+        ip.getAtt("AllocationId").toString()
+      ),
+    });
     const vpc = new ec2.Vpc(this, "Vpc", {
       vpcName: "vpc",
       subnetConfiguration: [
@@ -107,11 +113,24 @@ class VpcStack extends cdk.Stack {
       ],
       maxAzs: 3,
       natGateways: 3,
+      natGatewayProvider: natProvider,
     });
     vpc.addGatewayEndpoint("S3Endpoint", {
       service: ec2.GatewayVpcEndpointAwsService.S3,
     });
     return vpc;
+  }
+
+  private createOutIpAddresses() {
+    return ["OutIpAddress1", "OutIpAddress2", "OutIpAddress3"].map((ip) =>
+      this.createIpAddress(ip)
+    );
+  }
+
+  private createIpAddress(id: string) {
+    return new ec2.CfnEIP(this, id, {
+      tags: [{ key: "Name", value: id }],
+    });
   }
 }
 
