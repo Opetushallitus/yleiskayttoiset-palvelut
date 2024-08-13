@@ -24,29 +24,6 @@
         background-color: var(--background-color);
       }
 
-      .logout,
-      .add-token {
-        display: inline-block;
-        margin: 10px;
-      }
-
-      input[type="text"],
-      button {
-        margin: 5px;
-        padding: 10px;
-        font-size: 16px;
-      }
-
-      button {
-        background-color: #f0f0f0; /* Pastel button color */
-        border: none;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background-color: #e0e0e0;
-      }
-
       .cardContainer {
         padding: 32px;
         box-sizing: border-box;
@@ -109,13 +86,6 @@
   </head>
   <body>
     <div id="prContainer" class="cardContainer"></div>
-    <div class="logout">
-      <button onclick="logout()">Logout</button>
-    </div>
-    <div class="add-token">
-      <input type="text" id="tokenInput" placeholder="Enter GitHub token" />
-      <button onclick="saveToken()">Save Token</button>
-    </div>
     <script>
       const repos = [
         "Opetushallitus/cas",
@@ -138,25 +108,7 @@
         "Opetushallitus/vtj",
         "Opetushallitus/yleiskayttoiset-palvelut",
       ];
-      let token = localStorage.getItem("token") || "";
-
-      function saveToken() {
-        token = document.getElementById("tokenInput").value;
-        localStorage.setItem("token", token);
-      }
-
-      function logout() {
-        localStorage.removeItem("token");
-        token = "";
-      }
-
-      document
-        .getElementById("tokenInput")
-        .addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            saveToken();
-          }
-        });
+      const token = localStorage.getItem("token") || "";
 
       const runTitle = run => `${run.head_repository.name} [ga-${run.run_number}] ${run.name}@${run.head_branch}`
       const runCommit = run => run.head_commit.message.split("\n")[0]
