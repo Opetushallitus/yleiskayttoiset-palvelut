@@ -3,6 +3,7 @@ const repos = {
   "Opetushallitus/cas-oppija": [],
   "Opetushallitus/henkilo-ui": ["SonarCloud Code Analysis"],
   "Opetushallitus/henkilotietomuutos": ["sonarcloud"],
+  "Opetushallitus/java-utils": [],
   "Opetushallitus/kayttooikeus": [],
   "Opetushallitus/koodisto": [],
   "Opetushallitus/koodisto-app": [],
