@@ -17,6 +17,7 @@ const repos = {
   "Opetushallitus/varda-rekisterointi": [],
   "Opetushallitus/vtj": [],
   "Opetushallitus/yleiskayttoiset-palvelut": [],
+  "Opetushallitus/otuva": [],
 };
 
 function updateTrunks(incubatorFilter) {
