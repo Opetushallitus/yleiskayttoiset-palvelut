@@ -12,7 +12,6 @@ const repos = {
   "Opetushallitus/organisaatio": [],
   "Opetushallitus/osoitepalvelu": ["SonarCloud Code Analysis"],
   "Opetushallitus/palveluvayla": [],
-  "Opetushallitus/rekisterointi": ["npm-audit"],
   "Opetushallitus/service-provider": [],
   "Opetushallitus/varda-rekisterointi": [],
   "Opetushallitus/vtj": [],
