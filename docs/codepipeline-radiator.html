@@ -67,7 +67,7 @@
      });
 
      function group(pipelines) {
-         const groupFn = pipeline => pipeline.name.split("Deploy")[0] || "yleiskayttoiset-palvelut"
+         const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || "yleiskayttoiset-palvelut"
          return Object.groupBy(pipelines, groupFn)
      }
      function sortableName(x) {
