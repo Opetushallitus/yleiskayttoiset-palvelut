@@ -1,27 +1,6 @@
-const repos = {
-  "Opetushallitus/cas": [],
-  "Opetushallitus/cas-oppija": [],
-  "Opetushallitus/henkilo-ui": ["SonarCloud Code Analysis"],
-  "Opetushallitus/henkilotietomuutos": ["sonarcloud"],
-  "Opetushallitus/java-utils": [],
-  "Opetushallitus/kayttooikeus": [],
-  "Opetushallitus/koodisto": [],
-  "Opetushallitus/koodisto-app": [],
-  "Opetushallitus/login-notifications": ["SonarCloud Code Analysis"],
-  "Opetushallitus/oppijanumerorekisteri": ["SonarCloud Code Analysis"],
-  "Opetushallitus/organisaatio": [],
-  "Opetushallitus/osoitepalvelu": ["SonarCloud Code Analysis"],
-  "Opetushallitus/palveluvayla": [],
-  "Opetushallitus/service-provider": [],
-  "Opetushallitus/varda-rekisterointi": [],
-  "Opetushallitus/vtj": [],
-  "Opetushallitus/yleiskayttoiset-palvelut": [],
-  "Opetushallitus/otuva": [],
-};
-
 function updateTrunks(incubatorFilter) {
   return async () => {
-    await Promise.all(Object.keys(repos).map(async (repoName, index) => {
+    await Promise.all(GITHUB_REPOS.map(async (repoName, index) => {
       await fetchBranches(repoName).then((data) => {
         const branchMain = data.find((branch) => branch.name === "main");
         const branchMaster = data.find((branch) => branch.name === "master");
@@ -32,7 +11,7 @@ function updateTrunks(incubatorFilter) {
           const existingCard = trunkContainer.querySelector(
             `[data-repo-name="${repoName}"]`,
           );
-          const incubatorChecks = repos[repoName];
+          const incubatorChecks = GITHUB_REPO_INCUBATOR_CHECKS[repoName];
 
           if (existingCard) {
             updateCard(

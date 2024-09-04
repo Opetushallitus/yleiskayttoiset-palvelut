@@ -105,27 +105,6 @@
   <body>
     <div id="prContainer" class="cardContainer"></div>
     <script>
-      const repos = [
-        "Opetushallitus/cas",
-        "Opetushallitus/cas-oppija",
-        "Opetushallitus/henkilo-ui",
-        "Opetushallitus/henkilotietomuutos",
-        "Opetushallitus/java-utils",
-        "Opetushallitus/kayttooikeus",
-        "Opetushallitus/koodisto",
-        "Opetushallitus/koodisto-app",
-        "Opetushallitus/login-notifications",
-        "Opetushallitus/oppijanumerorekisteri",
-        "Opetushallitus/organisaatio",
-        "Opetushallitus/osoitepalvelu",
-        "Opetushallitus/otuva",
-        "Opetushallitus/palveluvayla",
-        "Opetushallitus/rekisterointi",
-        "Opetushallitus/service-provider",
-        "Opetushallitus/varda-rekisterointi",
-        "Opetushallitus/vtj",
-        "Opetushallitus/yleiskayttoiset-palvelut",
-      ];
       let token = localStorage.getItem("token") || "";
 
       function getAge(pr) {
@@ -190,7 +169,7 @@
      }
 
       function updatePRs() {
-        repos.forEach((repoName) => {
+        GITHUB_REPOS.forEach((repoName) => {
           fetchPulls(repoName)
             .then((data) => {
               data.sort((a, b) => b.number - a.number);

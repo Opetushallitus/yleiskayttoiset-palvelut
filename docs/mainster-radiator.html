@@ -94,33 +94,12 @@
 <div id="trunkContainer" class="cardContainer"></div>
 <div id="prContainer" class="cardContainer"></div>
 <script>
-    const repos = [
-        "Opetushallitus/cas",
-        "Opetushallitus/cas-oppija",
-        "Opetushallitus/henkilo-ui",
-        "Opetushallitus/henkilotietomuutos",
-        "Opetushallitus/java-utils",
-        "Opetushallitus/kayttooikeus",
-        "Opetushallitus/koodisto",
-        "Opetushallitus/koodisto-app",
-        "Opetushallitus/login-notifications",
-        "Opetushallitus/oppijanumerorekisteri",
-        "Opetushallitus/organisaatio",
-        "Opetushallitus/osoitepalvelu",
-        "Opetushallitus/otuva",
-        "Opetushallitus/palveluvayla",
-        "Opetushallitus/rekisterointi",
-        "Opetushallitus/service-provider",
-        "Opetushallitus/varda-rekisterointi",
-        "Opetushallitus/vtj",
-        "Opetushallitus/yleiskayttoiset-palvelut",
-    ];
     let token = localStorage.getItem("token");
 
     const checkRunIsSuccess = checkRun => ["success", "skipped"].includes(checkRun.conclusion);
 
     function updateTrunks() {
-        return Pormise.all(repos.map((repoName, index) => {
+        return Pormise.all(GITHUB_REPOS.map((repoName, index) => {
             return fetchBranches(repoName)
                 .then((data) => {
                     const branchMain = data.find((branch) => branch.name === "main");

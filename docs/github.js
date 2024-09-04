@@ -1,4 +1,27 @@
 const UPDATE_INTERVAL = 10 * 1000
+
+const GITHUB_REPO_INCUBATOR_CHECKS = {
+    "Opetushallitus/cas": [],
+    "Opetushallitus/cas-oppija": [],
+    "Opetushallitus/henkilo-ui": ["SonarCloud Code Analysis"],
+    "Opetushallitus/henkilotietomuutos": ["sonarcloud"],
+    "Opetushallitus/java-utils": [],
+    "Opetushallitus/kayttooikeus": [],
+    "Opetushallitus/koodisto": [],
+    "Opetushallitus/koodisto-app": [],
+    "Opetushallitus/login-notifications": ["SonarCloud Code Analysis"],
+    "Opetushallitus/oppijanumerorekisteri": ["SonarCloud Code Analysis"],
+    "Opetushallitus/organisaatio": [],
+    "Opetushallitus/osoitepalvelu": ["SonarCloud Code Analysis"],
+    "Opetushallitus/palveluvayla": [],
+    "Opetushallitus/service-provider": [],
+    "Opetushallitus/varda-rekisterointi": [],
+    "Opetushallitus/vtj": [],
+    "Opetushallitus/yleiskayttoiset-palvelut": [],
+    "Opetushallitus/otuva": [],
+};
+const GITHUB_REPOS = Object.keys(GITHUB_REPO_INCUBATOR_CHECKS)
+
 async function repeatedly(func) {
     try {
         console.log("Updating...")
