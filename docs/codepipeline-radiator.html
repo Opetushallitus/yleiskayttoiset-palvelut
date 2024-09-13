@@ -94,10 +94,13 @@
          }).reduce(function (a, b) {
              return a === 'Failed' || b === 'Failed' ? 'Failed' : a === 'InProgress' || b === 'InProgress' ? 'InProgress' : 'Succeeded';
          });
+         const actions  = data.stageStates.flatMap(_ => _.actionStates)
+         const lastDeploy = actions.find(a => a.actionName === "Deploy")?.latestExecution.lastStatusChange
 
          return {
              name: data.pipelineName,
              overallState,
+             lastDeploy,
              stages: data.stageStates.map(stage => {
                  return {
                      name: stage.stageName,
@@ -167,6 +170,9 @@
               }
              card.appendChild(stageCard)
          }
+         const lastDeploy = document.createElement('div');
+         lastDeploy.innerText = pipeline.lastDeploy
+         card.appendChild(lastDeploy)
          return card
      }
 
