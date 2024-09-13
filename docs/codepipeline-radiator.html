@@ -68,9 +68,21 @@
     <script src=
     "https://sdk.amazonaws.com/js/aws-sdk-2.410.0.min.js"></script>
     <script>
-     let key  = localStorage.getItem("key2");
-     let secret = localStorage.getItem("secret2");
-     let region = localStorage.getItem("region2");
+      // Migrate local storage items to more descriptive names
+      function renameLocalStorageItem(from, to) {
+        const value = localStorage.getItem(from)
+        if (value) {
+          localStorage.setItem(to, value)
+          localStorage.removeItem(from)
+        }
+      }
+      renameLocalStorageItem("key2", "yleiskayttoiset-palvelut.key")
+      renameLocalStorageItem("secret2", "yleiskayttoiset-palvelut.secret")
+      renameLocalStorageItem("region2", "yleiskayttoiset-palvelut.region")
+
+     let key  = localStorage.getItem("yleiskayttoiset-palvelut.key");
+     let secret = localStorage.getItem("yleiskayttoiset-palvelut.secret");
+     let region = localStorage.getItem("yleiskayttoiset-palvelut.region");
 
      AWS.config.update({
          accessKeyId: key,
