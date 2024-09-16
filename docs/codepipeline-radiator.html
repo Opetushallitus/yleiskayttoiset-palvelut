@@ -100,8 +100,7 @@
      }
      async function pipelineState(name) {
          const data = await codepipeline.getPipelineState({ name }).promise();
-         console.log(data)
-         var overallState = data.stageStates.map(function (stage) {
+         const overallState = data.stageStates.map(function (stage) {
              return stage.latestExecution.status;
          }).reduce(function (a, b) {
              return a === 'Failed' || b === 'Failed' ? 'Failed' : a === 'InProgress' || b === 'InProgress' ? 'InProgress' : 'Succeeded';
