@@ -119,7 +119,7 @@
                      actions: stage.actionStates.map(action => {
                           return {
                               name: action.actionName,
-                              status: action.latestExecution.status
+                              status: action.latestExecution ? action.latestExecution.status : 'Unknown'
                           }
                      })
                  }
