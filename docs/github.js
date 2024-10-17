@@ -9,7 +9,6 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/kayttooikeus": [],
     "Opetushallitus/koodisto": [],
     "Opetushallitus/koodisto-app": [],
-    "Opetushallitus/login-notifications": ["SonarCloud Code Analysis"],
     "Opetushallitus/oppijanumerorekisteri": ["SonarCloud Code Analysis"],
     "Opetushallitus/organisaatio": [],
     "Opetushallitus/osoitepalvelu": ["SonarCloud Code Analysis"],
