@@ -3,7 +3,6 @@ const UPDATE_INTERVAL = 10 * 1000
 const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/cas-oppija": [],
     "Opetushallitus/henkilo-ui": ["SonarCloud Code Analysis"],
-    "Opetushallitus/henkilotietomuutos": ["sonarcloud"],
     "Opetushallitus/java-utils": [],
     "Opetushallitus/koodisto": [],
     "Opetushallitus/koodisto-app": [],
