@@ -8,7 +8,6 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/koodisto-app": [],
     "Opetushallitus/oppijanumerorekisteri": ["SonarCloud Code Analysis"],
     "Opetushallitus/organisaatio": [],
-    "Opetushallitus/osoitepalvelu": ["SonarCloud Code Analysis"],
     "Opetushallitus/palveluvayla": [],
     "Opetushallitus/service-provider": [],
     "Opetushallitus/varda-rekisterointi": [],
