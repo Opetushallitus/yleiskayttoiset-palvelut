@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { DnsStack } from "./dns";
 import * as constructs from "constructs";
 import * as sns from "aws-cdk-lib/aws-sns";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
@@ -37,9 +38,15 @@ class AlarmStack extends cdk.Stack {
   }
 
   createAlarmTopic() {
-    return new sns.Topic(this, "AlarmTopic", {
+    const topic = new sns.Topic(this, "AlarmTopic", {
       topicName: "alarm",
     });
+    new ssm.StringParameter(this, "AlarmTopiArn", {
+      parameterName: "alarm-topic-arn",
+      stringValue: topic.topicArn,
+    });
+
+    return topic
   }
 
   createAlarmsToSlackLambda() {
