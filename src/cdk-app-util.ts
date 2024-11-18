@@ -35,6 +35,10 @@ class ContinousDeploymentStack extends cdk.Stack {
         providerType: "GitHub",
       },
     );
+    new ssm.StringParameter(this, 'CodeStarConnectionArn', {
+      parameterName: 'code-star-connection-arn',
+      stringValue: connection.attrConnectionArn,
+    });
 
     ["hahtuva", "dev", "qa", "prod"].forEach(
       (env) =>
