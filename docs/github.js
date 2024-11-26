@@ -16,6 +16,9 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
 };
 const GITHUB_REPOS = Object.keys(GITHUB_REPO_INCUBATOR_CHECKS)
 
+module.exports = { GITHUB_REPOS: GITHUB_REPOS }
+
+
 async function repeatedly(func) {
     try {
         console.log("Updating...")
