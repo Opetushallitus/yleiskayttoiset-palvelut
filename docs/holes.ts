@@ -81,6 +81,8 @@ const htmlTemplate = `
 <html>
 <head>
     <title>Trivy GitHub Vulnerability Report - Yleiskäyttöiset Palvelut</title>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="120">
     <style>
         body { font-family: Arial, sans-serif; }
         h1 { color: #333; }
