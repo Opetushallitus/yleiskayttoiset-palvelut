@@ -79,7 +79,12 @@ class TrivyRunnerStack extends cdk.Stack {
     new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "trivy_report.html",
       defaultBehavior: {
-        origin: new cloudfront_origins.S3Origin(bucket, { originAccessIdentity })
+        origin: new cloudfront_origins.S3Origin(bucket, { originAccessIdentity }),
+        cachePolicy: new cloudfront.CachePolicy(this, "CachePolicy", {
+          defaultTtl: cdk.Duration.seconds(0),
+          minTtl: cdk.Duration.seconds(0),
+          maxTtl: cdk.Duration.seconds(0),
+        }),
       }
     })
 
