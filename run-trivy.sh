@@ -10,6 +10,7 @@ function main {
   cd "$repo/docs"
   require_docker
   init_nodejs
+  login_to_docker_if_possible
   npx ts-node holes.ts
   aws s3 cp ./trivy_report.html s3://oph-yleiskayttoiset-trivy-results/trivy_report.html
 }

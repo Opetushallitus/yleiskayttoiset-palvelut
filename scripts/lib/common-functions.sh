@@ -52,6 +52,15 @@ function npm_ci_if_package_lock_has_changed {
   fi
 }
 
+function login_to_docker_if_possible {
+  if [ -n "${DOCKER_USERNAME:-}" ] && [ -n "${DOCKER_PASSWORD:-}" ]; then
+    info "Logging in to dockerhub"
+    echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  else
+    info "Not logging into dockerhub"
+  fi
+}
+
 function fatal {
   log "ERROR" "$1"
   exit 1

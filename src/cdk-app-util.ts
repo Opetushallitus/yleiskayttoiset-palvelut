@@ -129,6 +129,14 @@ class TrivyRunnerStack extends cdk.Stack {
           privileged: true,
         },
         environmentVariables: {
+          DOCKER_USERNAME: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: "/docker/username",
+          },
+          DOCKER_PASSWORD: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: "/docker/password",
+          },
         },
         buildSpec: codebuild.BuildSpec.fromObject({
           version: "0.2",
@@ -136,6 +144,11 @@ class TrivyRunnerStack extends cdk.Stack {
             "git-credential-helper": "yes",
           },
           phases: {
+            pre_build: {
+              commands: [
+                "docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD",
+              ]
+            },
             build: {
               commands: [`./run-trivy.sh`],
             },
