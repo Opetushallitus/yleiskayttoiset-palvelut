@@ -51,7 +51,7 @@ function countVulnerabilities(reportPath: string): { low: number; medium: number
 }
 
 // Run Trivy on each GitHub repository
-const findings: { repoName: string; low: number; medium: number; high: number; critical: number }[] = [];
+const findings: { error: boolean; repoName: string; low: number; medium: number; high: number; critical: number }[] = [];
 
 repositories.forEach((repo) => {
     const repoName = repo.split("/").slice(-2).join("_").replace(/\./g, "_"); // Convert "github.com/owner/repo" to "owner_repo"
@@ -65,10 +65,10 @@ repositories.forEach((repo) => {
             `docker run --rm -v ${reportDir}:/reports ${trivyImage} repo ${repo} --scanners vuln --format json --output /reports/${repoName}_trivy.json`
         );
         const counts = countVulnerabilities(outputFile);
-        findings.push({ repoName, ...counts });
+        findings.push({ repoName, error: false, ...counts });
     } catch (error) {
         console.error(`Error scanning ${repo}:`, error);
-        findings.push({ repoName, low: 0, medium: 0, high: 0, critical: 0 });
+        findings.push({ repoName, error: true, low: 0, medium: 0, high: 0, critical: 0 });
     }
 });
 
@@ -111,10 +111,12 @@ const htmlTemplate = `
                     (finding) => `
                 <tr>
                     <td>${finding.repoName}</td>
+                    ${finding.error ? "<td colspan='4' class='non-zero'>Error scanning repository</td>" : `
                     <td class="${finding.low === 0 ? "zero" : "non-zero"}">${finding.low}</td>
                     <td class="${finding.medium === 0 ? "zero" : "non-zero"}">${finding.medium}</td>
                     <td class="${finding.high === 0 ? "zero" : "non-zero"}">${finding.high}</td>
                     <td class="${finding.critical === 0 ? "zero" : "non-zero"}">${finding.critical}</td>
+                    `}
                 </tr>
             `
                 )
