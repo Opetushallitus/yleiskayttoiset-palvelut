@@ -127,6 +127,6 @@ const htmlTemplate = `
 
 // Save the HTML report
 const reportPath = path.resolve("trivy_report.html");
-fs.writeFileSync(reportPath, htmlTemplate);
+fs.writeFileSync(reportPath, htmlTemplate, { encoding: "utf-8" });
 
 console.log(`HTML report generated: ${reportPath}`);
