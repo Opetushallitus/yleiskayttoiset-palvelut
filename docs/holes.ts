@@ -84,12 +84,10 @@ const htmlTemplate = `
     <meta charset="utf-8">
     <meta http-equiv="refresh" content="120">
     <style>
-        body { font-family: Arial, sans-serif; }
-        h1 { color: #333; }
-        p { font-size: 0.9em; color: #555; }
+        body { font-family: Arial, sans-serif; background-color: #000; color: #eee; }
+        p { font-size: 0.9em; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #000; }
         .zero { background-color: blue; color: white; }
         .non-zero { background-color: red; color: white; }
     </style>
