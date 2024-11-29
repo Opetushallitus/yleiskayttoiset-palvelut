@@ -6,6 +6,8 @@ import { PipelineType } from "aws-cdk-lib/aws-codepipeline";
 import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
 import * as constructs from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as events from "aws-cdk-lib/aws-events";
+import * as events_targets from "aws-cdk-lib/aws-events-targets";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { DnsStack } from "./dns";
 
@@ -40,6 +42,9 @@ class ContinousDeploymentStack extends cdk.Stack {
       stringValue: connection.attrConnectionArn,
     });
 
+
+    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props);
+
     ["hahtuva", "dev", "qa", "prod"].forEach(
       (env) =>
         new ContinousDeploymentPipelineStack(
@@ -50,6 +55,91 @@ class ContinousDeploymentStack extends cdk.Stack {
           props,
         ),
     );
+  }
+}
+
+class TrivyRunnerStack extends cdk.Stack {
+  constructor(
+    scope: constructs.Construct,
+    id: string,
+    connection: codestarconnections.CfnConnection,
+    props?: cdk.StackProps,
+  ) {
+    super(scope, id, props);
+
+    const pipeline = new codepipeline.Pipeline(
+      this,
+      "TrivyRunnerPipeline",
+      {
+        pipelineName: "TrivyRunner",
+        pipelineType: PipelineType.V1,
+      },
+    );
+    ;
+    new events.Rule(this, "TrivyRunnerSchedule", {
+      schedule: events.Schedule.cron({ minute: "0" }),
+      targets: [new events_targets.CodePipeline(pipeline)],
+    });
+
+    const sourceOutput = new codepipeline.Artifact();
+    const sourceAction =
+      new codepipeline_actions.CodeStarConnectionsSourceAction({
+        actionName: "Source",
+        connectionArn: connection.attrConnectionArn,
+        codeBuildCloneOutput: true,
+        owner: "Opetushallitus",
+        repo: "yleiskayttoiset-palvelut",
+        branch: "main",
+        output: sourceOutput,
+        triggerOnPush: false,
+      });
+    const sourceStage = pipeline.addStage({ stageName: "Source" });
+    sourceStage.addAction(sourceAction);
+    const trivyProject = new codebuild.PipelineProject(
+      this,
+      `TrivyProject`,
+      {
+        projectName: `RunTrivy`,
+        concurrentBuildLimit: 1,
+        environment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+          computeType: codebuild.ComputeType.SMALL,
+          privileged: true,
+        },
+        environmentVariables: {
+        },
+        buildSpec: codebuild.BuildSpec.fromObject({
+          version: "0.2",
+          env: {
+            "git-credential-helper": "yes",
+          },
+          phases: {
+            build: {
+              commands: [`./run-trivy.sh`],
+            },
+          },
+        }),
+      },
+    );
+
+    trivyProject.role?.attachInlinePolicy(
+      new iam.Policy(this, `TrivyRunnerPolicy`, {
+        statements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ["s3:*"],
+            resources: ["*"],
+          }),
+        ],
+      }),
+    );
+    const trivyAction = new codepipeline_actions.CodeBuildAction({
+      actionName: "Trivy",
+      input: sourceOutput,
+      project: trivyProject,
+    });
+    const stage = pipeline.addStage({ stageName: "Trivy" });
+    stage.addAction(trivyAction);
   }
 }
 
