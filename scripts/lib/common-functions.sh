@@ -23,6 +23,35 @@ function require_command {
   fi
 }
 
+function init_nodejs {
+  export NVM_DIR="${NVM_DIR:-$HOME/.cache/nvm}"
+  set +o errexit
+  source "$repo/scripts/nvm.sh"
+  nvm use "${node_version}" || nvm install "${node_version}"
+  set -o errexit
+}
+
+function npm_ci_if_package_lock_has_changed {
+  info "Checking if npm ci needs to be run"
+  require_command shasum
+  local -r checksum_file=".package-lock.json.checksum"
+
+  function run_npm_ci {
+    npm ci
+    shasum package-lock.json >"$checksum_file"
+  }
+
+  if [ ! -f "$checksum_file" ]; then
+    echo "new package-lock.json; running npm ci"
+    run_npm_ci
+  elif ! shasum --check "$checksum_file"; then
+    info "package-lock.json seems to have changed, running npm ci"
+    run_npm_ci
+  else
+    info "package-lock.json doesn't seem to have changed, skipping npm ci"
+  fi
+}
+
 function fatal {
   log "ERROR" "$1"
   exit 1
@@ -45,6 +74,7 @@ function aws {
     --platform linux/amd64 \
     --env AWS_PROFILE \
     --env AWS_DEFAULT_REGION \
+    --env AWS_CONTAINER_CREDENTIALS_RELATIVE_URI \
     --volume "${HOME}/.aws:/root/.aws" \
     --volume "$(pwd):/aws" \
     --rm \
