@@ -101,10 +101,10 @@ const htmlTemplate = `
         <thead>
             <tr>
                 <th>Repository</th>
-                <th>Low Severity</th>
-                <th>Medium Severity</th>
-                <th>High Severity</th>
-                <th>Critical Severity</th>
+                <th>Kriittinen</th>
+                <th>Korkea</th>
+                <th>Keskitaso</th>
+                <th>Matala</th>
             </tr>
         </thead>
         <tbody>
@@ -114,10 +114,10 @@ const htmlTemplate = `
                 <tr>
                     <td>${finding.repoName}</td>
                     ${finding.error ? "<td colspan='4' class='non-zero'>Error scanning repository</td>" : `
-                    <td class="${finding.low === 0 ? "zero" : "non-zero"}">${finding.low}</td>
-                    <td class="${finding.medium === 0 ? "zero" : "non-zero"}">${finding.medium}</td>
-                    <td class="${finding.high === 0 ? "zero" : "non-zero"}">${finding.high}</td>
                     <td class="${finding.critical === 0 ? "zero" : "non-zero"}">${finding.critical}</td>
+                    <td class="${finding.high === 0 ? "zero" : "non-zero"}">${finding.high}</td>
+                    <td class="${finding.medium === 0 ? "zero" : "non-zero"}">${finding.medium}</td>
+                    <td class="${finding.low === 0 ? "zero" : "non-zero"}">${finding.low}</td>
                     `}
                 </tr>
             `
