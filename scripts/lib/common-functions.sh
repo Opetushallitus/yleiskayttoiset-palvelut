@@ -23,6 +23,14 @@ function require_command {
   fi
 }
 
+function init_nodejs {
+  export NVM_DIR="${NVM_DIR:-$HOME/.cache/nvm}"
+  set +o errexit
+  source "$repo/scripts/nvm.sh"
+  nvm use "${node_version}" || nvm install "${node_version}"
+  set -o errexit
+}
+
 function fatal {
   log "ERROR" "$1"
   exit 1
