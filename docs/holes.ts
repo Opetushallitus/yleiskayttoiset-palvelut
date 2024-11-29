@@ -62,7 +62,7 @@ repositories.forEach((repo) => {
     try {
         // Run Trivy in Docker for GitHub repository with "--scanners vuln"
         execSync(
-            `docker run --rm -v ${reportDir}:/reports ${trivyImage} repo ${repo} --scanners vuln --format json --output /reports/${repoName}_trivy.json`
+            `docker run --rm --volume trivy-cache:/trivy-cache --volume ${reportDir}:/reports ${trivyImage} repo ${repo} --cache-dir /trivy-cache --scanners vuln --format json --output /reports/${repoName}_trivy.json`
         );
         const counts = countVulnerabilities(outputFile);
         findings.push({ repoName, error: false, ...counts });
