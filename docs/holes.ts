@@ -29,6 +29,7 @@ if (!fs.existsSync(reportDir)) {
 
 // Docker Trivy image
 const trivyImage = "aquasec/trivy:latest";
+const trivyVersion = execSync(`docker run --rm ${trivyImage} --version`).toString().match(/Version:\s+(\S+)/)?.[1] || "Unknown";
 
 // Function to count vulnerabilities from a Trivy JSON report
 function countVulnerabilities(reportPath: string): { low: number; medium: number; high: number; critical: number } {
@@ -95,6 +96,7 @@ const htmlTemplate = `
 <body>
     <h1>Trivy GitHub Vulnerability Report - Yleiskäyttöiset Palvelut</h1>
     <p>Report generated on: ${currentDate}</p>
+    <p>Trivy Version: ${trivyVersion}</p>
     <table>
         <thead>
             <tr>
