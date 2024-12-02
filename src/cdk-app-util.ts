@@ -1,3 +1,4 @@
+import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import * as codestarconnections from "aws-cdk-lib/aws-codestarconnections";
 import * as cdk from "aws-cdk-lib";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
@@ -10,6 +11,8 @@ import * as constructs from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as events from "aws-cdk-lib/aws-events";
 import * as events_targets from "aws-cdk-lib/aws-events-targets";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import {BucketAccessControl} from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
@@ -23,15 +26,19 @@ class CdkAppUtil extends cdk.App {
       account: process.env.CDK_DEFAULT_ACCOUNT,
       region: process.env.CDK_DEFAULT_REGION,
     };
-    new DnsStack(this, "DnsStack", { env });
+    const {hostedZone} = new DnsStack(this, "DnsStack", { env });
     new ContinousDeploymentStack(this, "ContinuousDeploymentStack", {
       env,
+      hostedZone,
     });
   }
 }
 
+type ContinousDeploymentStackProps = cdk.StackProps & {
+  hostedZone: route53.IHostedZone,
+}
 class ContinousDeploymentStack extends cdk.Stack {
-  constructor(scope: constructs.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: constructs.Construct, id: string, props: ContinousDeploymentStackProps) {
     super(scope, id, props);
     const connection = new codestarconnections.CfnConnection(
       this,
@@ -46,8 +53,7 @@ class ContinousDeploymentStack extends cdk.Stack {
       stringValue: connection.attrConnectionArn,
     });
 
-
-    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props);
+    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props);
 
     ["hahtuva", "dev", "qa", "prod"].forEach(
       (env) =>
@@ -67,6 +73,7 @@ class TrivyRunnerStack extends cdk.Stack {
     scope: constructs.Construct,
     id: string,
     connection: codestarconnections.CfnConnection,
+    hostedZone: route53.IHostedZone,
     props?: cdk.StackProps,
   ) {
     super(scope, id, props);
@@ -74,10 +81,19 @@ class TrivyRunnerStack extends cdk.Stack {
       bucketName: "oph-yleiskayttoiset-trivy-results",
       accessControl: BucketAccessControl.PRIVATE,
     })
+    const domainName = `trivy.util.yleiskayttoiset.opintopolku.fi`
+    const CLOUDFRONT_CERTIFICATE_REGION = "us-east-1";
+    const cert = new certificatemanager.DnsValidatedCertificate(this, "Certificate", {
+      domainName,
+      hostedZone,
+      region: CLOUDFRONT_CERTIFICATE_REGION,
+    })
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, "OriginAccessIdentity")
     bucket.grantRead(originAccessIdentity)
-    new cloudfront.Distribution(this, "Distribution", {
+    const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "trivy_report.html",
+      domainNames: [domainName],
+      certificate: cert,
       defaultBehavior: {
         origin: new cloudfront_origins.S3Origin(bucket, { originAccessIdentity }),
         cachePolicy: new cloudfront.CachePolicy(this, "CachePolicy", {
@@ -87,7 +103,13 @@ class TrivyRunnerStack extends cdk.Stack {
         }),
       }
     })
-
+    new route53.ARecord(this, "CloudFrontDnsRecord", {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(
+        new route53_targets.CloudFrontTarget(distribution)
+      )
+    })
 
     const pipeline = new codepipeline.Pipeline(
       this,
