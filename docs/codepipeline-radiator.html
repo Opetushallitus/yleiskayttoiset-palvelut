@@ -90,12 +90,16 @@
          region: region
      });
      let ykCodepipeline = new AWS.CodePipeline();
-     let orgCredentialsProvider = new AWS.ChainableTemporaryCredentials({
-         params: { RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader' }
-     })
      let orgCodepipeline = new AWS.CodePipeline({
-          credentials: orgCredentialsProvider
+         credentials: new AWS.ChainableTemporaryCredentials({
+             params: {RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader'}
+         })
      });
+     let palveluvaylaCodepipeline = new AWS.CodePipeline({
+         credentials: new AWS.ChainableTemporaryCredentials({
+             params: {RoleArn: 'arn:aws:iam::414665903273:role/RadiatorReader'}
+         })
+      });
 
      function group(account, pipelines) {
          const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || account
@@ -137,8 +141,11 @@
              account: "yleiskayttoiset-palvelut",
              codepipeline: ykCodepipeline,
          }, {
-             account: "organisaatio",
+             account: "Organisaatiopalvelu",
              codepipeline: orgCodepipeline,
+         }, {
+             account: "Palveluväylä",
+             codepipeline: palveluvaylaCodepipeline,
          }]
          for (const {account, codepipeline} of accounts) {
              try {
