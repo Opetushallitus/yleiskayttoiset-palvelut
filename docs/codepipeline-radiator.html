@@ -89,16 +89,22 @@
          secretAccessKey: secret,
          region: region
      });
-     let codepipeline = new AWS.CodePipeline();
+     let ykCodepipeline = new AWS.CodePipeline();
+     let orgCredentialsProvider = new AWS.ChainableTemporaryCredentials({
+         params: { RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader' }
+     })
+     let orgCodepipeline = new AWS.CodePipeline({
+          credentials: orgCredentialsProvider
+     });
 
-     function group(pipelines) {
-         const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || "yleiskayttoiset-palvelut"
+     function group(account, pipelines) {
+         const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || account
          return Object.groupBy(pipelines, groupFn)
      }
      function sortableName(x) {
          return x.replace("Hahtuva", "1").replace("Dev", "2").replace("Qa", "3").replace("Prod", "4");
      }
-     async function pipelineState(name) {
+     async function pipelineState(codepipeline, name) {
          const data = await codepipeline.getPipelineState({ name }).promise();
          const overallState = data.stageStates.map(function (stage) {
              return stage.latestExecution.status;
@@ -127,47 +133,56 @@
          }
      }
      async function updatePipelines() {
-         try {
-             const data = await codepipeline.listPipelines({}).promise();
-             const groups = group(data.pipelines.toSorted((a, b) => {
-                  return sortableName(a.name).localeCompare(sortableName(b.name));
-             }))
-             for (const [project, pipelines] of Object.entries(groups)) {
-                 let header = document.getElementById(`header-${project}`)
-                 if (!header) {
-                     header = document.createElement('h1')
-                     header.id = `header-${project}`
-                     header.innerText = project
-                     header.style.color = 'white'
-                     document.body.appendChild(header)
-                 }
-                 let row = document.getElementById(`row-${project}`)
-                 if (!row) {
-                      row = document.createElement('div')
-                      row.id = `row-${project}`
-                      row.className = 'card-row'
-                      document.body.appendChild(row)
-                 }
+         const accounts = [{
+             account: "yleiskayttoiset-palvelut",
+             codepipeline: ykCodepipeline,
+         }, {
+             account: "organisaatio",
+             codepipeline: orgCodepipeline,
+         }]
+         for (const {account, codepipeline} of accounts) {
+             try {
+                 const data = await codepipeline.listPipelines({}).promise();
+                 const groups = group(account, data.pipelines.toSorted((a, b) => {
+                     return sortableName(a.name).localeCompare(sortableName(b.name));
+                 }))
+                 for (const [project, pipelines] of Object.entries(groups)) {
+                     let header = document.getElementById(`header-${account}-${project}`)
+                     if (!header) {
+                         header = document.createElement('h1')
+                         header.id = `header-${account}-${project}`
+                         header.innerText = project
+                         header.style.color = 'white'
+                         document.body.appendChild(header)
+                     }
+                     let row = document.getElementById(`row-${account}-${project}`)
+                     if (!row) {
+                         row = document.createElement('div')
+                         row.id = `row-${account}-${project}`
+                         row.className = 'card-row'
+                         document.body.appendChild(row)
+                     }
 
-                 for (const pipeline of pipelines) {
-                     const state = await pipelineState(pipeline.name)
-                     const newCard = createCard(state);
-                     let card = document.getElementById(pipeline.name);
-                     if (card) {
-                         card.replaceWith(newCard)
-                     } else {
-                         row.appendChild(newCard);
+                     for (const pipeline of pipelines) {
+                         const state = await pipelineState(codepipeline, pipeline.name)
+                         const newCard = createCard(account, state);
+                         let card = document.getElementById(account + pipeline.name);
+                         if (card) {
+                             card.replaceWith(newCard)
+                         } else {
+                             row.appendChild(newCard);
+                         }
                      }
                  }
+             } catch (err) {
+                 console.log(err, err.stack);
              }
-         } catch (err) {
-             console.log(err, err.stack);
          }
      }
 
-     function createCard(pipeline) {
+     function createCard(account, pipeline) {
          let card = document.createElement('div');
-         card.id = pipeline.name;
+         card.id = account + pipeline.name;
          card.innerHTML = pipeline.name;
          card.className = 'card ' + pipeline.overallState
          for (const stage of pipeline.stages) {
