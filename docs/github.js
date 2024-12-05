@@ -10,7 +10,6 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/palveluvayla": [],
     "Opetushallitus/varda-rekisterointi": [],
     "Opetushallitus/rekisterointi": [],
-    "Opetushallitus/vtj": [],
     "Opetushallitus/yleiskayttoiset-palvelut": [],
     "Opetushallitus/otuva": [],
 };
