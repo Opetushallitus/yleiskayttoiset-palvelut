@@ -212,7 +212,7 @@
               for (const action of stage.actions) {
                   const actionCard = document.createElement('div');
                   actionCard.innerHTML = action.name;
-                  actionCard.className = 'action ' + stage.status
+                  actionCard.className = 'action ' + action.status
                   stageCard.appendChild(actionCard)
               }
              stages.appendChild(stageCard)
