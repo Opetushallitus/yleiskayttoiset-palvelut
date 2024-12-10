@@ -219,10 +219,27 @@
          }
          card.appendChild(stages)
          const lastDeploy = document.createElement('div');
-         lastDeploy.innerText = pipeline.lastDeploy
+         lastDeploy.innerText = formatTime(pipeline.lastDeploy)
          card.appendChild(lastDeploy)
          return card
      }
+
+      const dateFormat = new Intl.DateTimeFormat('fi-FI', {
+          timeZone: 'Europe/Helsinki',
+          weekday: 'long',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+      })
+
+      function formatTime(date) {
+          if (!date) {
+              return "Unknown"
+          }
+          return dateFormat.format(date)
+      }
 
      window.onload = updatePipelines
      setInterval(updatePipelines, 5000);
