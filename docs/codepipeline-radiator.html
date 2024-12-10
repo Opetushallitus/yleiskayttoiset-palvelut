@@ -16,26 +16,37 @@
      }
 
      .card-row {
-         display: flex;
-         flex-direction: row;
          width: 100%;
+         display: grid;
+         grid-template-columns: 1fr 1fr 1fr 1fr;
+         grid-auto-columns: 1fr;
+         grid-gap: 10px;
      }
 
      .card {
-         flex-grow: 1;
          background-color: #f0f0f0;
          color: white;
-         margin: 10px;
          padding: 10px;
          display: inline-block;
          text-align: center;
          border-radius: 5px;
+         height: auto;
+
+         box-sizing: border-box;
+         display: flex;
+         flex-direction: column;
      }
 
+     .card .stages {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        border-radius: 4px;
+     }
 
      .card .stage {
          display: flex;
-         flex-direction: row;
+         flex-direction: column;
          border-radius: 4px;
      }
      .card .stage .action {
@@ -192,6 +203,8 @@
          card.id = account + pipeline.name;
          card.innerHTML = pipeline.name;
          card.className = 'card ' + pipeline.overallState
+         const stages = document.createElement('div');
+         stages.classList.add("stages");
          for (const stage of pipeline.stages) {
               const stageCard = document.createElement('div');
               stageCard.className = 'stage ' + stage.status
@@ -201,8 +214,9 @@
                   actionCard.className = 'action ' + stage.status
                   stageCard.appendChild(actionCard)
               }
-             card.appendChild(stageCard)
+             stages.appendChild(stageCard)
          }
+         card.appendChild(stages)
          const lastDeploy = document.createElement('div');
          lastDeploy.innerText = pipeline.lastDeploy
          card.appendChild(lastDeploy)
