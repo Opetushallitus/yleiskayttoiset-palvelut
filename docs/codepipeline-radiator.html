@@ -127,7 +127,8 @@
              return a === 'Failed' || b === 'Failed' ? 'Failed' : a === 'InProgress' || b === 'InProgress' ? 'InProgress' : 'Succeeded';
          });
          const actions  = data.stageStates.flatMap(_ => _.actionStates)
-         const lastDeploy = actions.find(a => a.actionName === "Deploy")?.latestExecution.lastStatusChange
+         const deployActionName =  name === "TrivyRunner" ? "Trivy" : "Deploy"
+         const lastDeploy = actions.find(a => a.actionName === deployActionName)?.latestExecution.lastStatusChange
 
          return {
              name: data.pipelineName,
