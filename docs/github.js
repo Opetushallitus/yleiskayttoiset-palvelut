@@ -15,8 +15,6 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
 };
 const GITHUB_REPOS = Object.keys(GITHUB_REPO_INCUBATOR_CHECKS)
 
-module.exports = { GITHUB_REPOS: GITHUB_REPOS }
-
 
 async function repeatedly(func) {
     try {
@@ -26,6 +24,29 @@ async function repeatedly(func) {
         console.log(`Scheduling next update in ${UPDATE_INTERVAL} ms`)
         setTimeout(() => repeatedly(func), UPDATE_INTERVAL)
     }
+}
+
+async function fetchRepositoriesWithoutAuth(orgName) {
+    const PER_PAGE = 100
+    function fetchPage(page) {
+        return fetch(
+            `https://api.github.com/orgs/${orgName}/repos?per_page=${PER_PAGE}&page=${page}`,
+            {
+                headers: {
+                    Accept: "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+            }
+        ).then((response) => response.json())
+    }
+
+    let repos = []
+    for (let i = 1;; ++i) {
+        const next = await fetchPage(i)
+        repos = [...repos, ...next]
+        if (next.length < PER_PAGE) break
+    }
+    return repos
 }
 
 async function fetchCheckSuites(repoName, sha) {
@@ -182,3 +203,8 @@ async function fetchActionRuns(repoName) {
   return results
 }
 
+
+module.exports = {
+    GITHUB_REPOS,
+    fetchRepositoriesWithoutAuth,
+}
