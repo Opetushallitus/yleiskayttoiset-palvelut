@@ -121,7 +121,7 @@ class TrivyRunnerStack extends cdk.Stack {
     );
 
     new events.Rule(this, "TrivyRunnerSchedule", {
-      schedule: events.Schedule.cron({ minute: "0" }),
+      schedule: events.Schedule.cron({ hour: "1/4", minute: "0" }),
       targets: [new events_targets.CodePipeline(pipeline)],
     });
 
@@ -144,6 +144,7 @@ class TrivyRunnerStack extends cdk.Stack {
       `TrivyProject`,
       {
         projectName: `RunTrivy`,
+        timeout: cdk.Duration.hours(2),
         concurrentBuildLimit: 1,
         environment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
