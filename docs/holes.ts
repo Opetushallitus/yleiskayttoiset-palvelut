@@ -8,9 +8,19 @@ const {
   fetchRepositoriesWithoutAuth,
 }: {
   GITHUB_REPOS: string[],
-  fetchRepositoriesWithoutAuth: (org: string) => Promise<ReadonlyArray<{ full_name: string }>>;
+  fetchRepositoriesWithoutAuth: (org: string) => Promise<ReadonlyArray<{
+    full_name: string
+    archived: boolean
+  }>>;
 } = require("./github.js");
 
+const TRIVY_VIEW = process.argv[2]
+
+type TrivyView = {
+  viewName: string;
+  title: string;
+  repositories: string[];
+}
 const yleiskayttoisetRepositories = GITHUB_REPOS.map(repo => `github.com/${repo}`);
 
 // Define the types for Trivy JSON report
@@ -28,24 +38,140 @@ interface TrivyReport {
 
 async function main() {
   const allRepositories = await fetchRepositoriesWithoutAuth("Opetushallitus")
-    .then(repos => repos.map(repo => `github.com/${repo.full_name}`));
-  const remainingRepositories = allRepositories.filter(repo => !yleiskayttoisetRepositories.includes(repo));
+    .then(repos => repos.filter(repo => !repo.archived).map(repo => `github.com/${repo.full_name}`));
 
-  const outputs: Array<{
-    title: string;
-    filename: string;
-    repositories: string[];
-  }> = [
-    { title: "Yleiskäyttöiset Palvelut", filename: "trivy_report.html", repositories: yleiskayttoisetRepositories },
-    { title: "Muut", filename: "muut.html", repositories: remainingRepositories },
+  const views: Array<TrivyView> = [
+    {viewName: "trivy_report", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
+    {
+      viewName: "ehoks",
+      title: "eHOKS - ammatillisen koulutuksen henkilökohtaisen osaamisen suunnitelma",
+      repositories: [
+        "github.com/Opetushallitus/ehoks",
+        "github.com/Opetushallitus/ehoks-ui",
+        "github.com/Opetushallitus/heratepalvelu",
+      ]
+    },
+    {
+      viewName: "eperusteet",
+      title: "ePerusteet - opetussuunnitelmien ja tutkintojen ja koulutusten perusteet",
+      repositories: [
+        "github.com/Opetushallitus/eperusteet-ai",
+        "github.com/Opetushallitus/eperusteet-amosaa",
+        "github.com/Opetushallitus/eperusteet-amosaa-ui",
+        "github.com/Opetushallitus/eperusteet-backend-utils",
+        "github.com/Opetushallitus/eperusteet-e2e-smoke-test",
+        "github.com/Opetushallitus/eperusteet-frontend-utils",
+        "github.com/Opetushallitus/eperusteet-opintopolku",
+        "github.com/Opetushallitus/eperusteet-pdf",
+        "github.com/Opetushallitus/eperusteet-ui",
+        "github.com/Opetushallitus/eperusteet-vst-ui",
+        "github.com/Opetushallitus/eperusteet-ylops",
+        "github.com/Opetushallitus/eperusteet-ylops-ui",
+        "github.com/Opetushallitus/eperusteet",
+      ]
+    },
+    {
+      viewName: "kios", title: "KIOS - kieliosaamisen palvelut", repositories: [
+        "github.com/Opetushallitus/kieli-ja-kaantajatutkinnot",
+        "github.com/Opetushallitus/vkt",
+        "github.com/Opetushallitus/yki-frontend",
+        "github.com/Opetushallitus/yki",
+      ]
+    },
+    {
+      viewName: "koski", title: "Koski - opintosuoritus- ja tutkintotietojen tietovaranto", repositories: [
+        "github.com/Opetushallitus/koski",
+        "github.com/Opetushallitus/koski-luovutuspalvelu",
+        "github.com/Opetushallitus/koski-mydata",
+      ]
+    },
+    {
+      viewName: "kielitutkintorekisteri", title: "KOTO-kokonaisuus ja kielitutkintorekisterit", repositories: [
+        "github.com/Opetushallitus/koto-rekisteri",
+      ]
+    },
+    {
+      viewName: "koulutukseen_hakeutumisen_palvelut", title: "Koulutukseen hakeutumisen palvelut", repositories: [
+        "github.com/Opetushallitus/ataru",
+        "github.com/Opetushallitus/haku",
+        "github.com/Opetushallitus/hakurekisteri",
+        "github.com/Opetushallitus/liiteri",
+      ]
+    },
+    {
+      viewName: "koulutustarjonnan_palvelut", title: "Koulutustarjonnan palvelut", repositories: [
+        "github.com/Opetushallitus/konfo-backend",
+        "github.com/Opetushallitus/konfo-files",
+        "github.com/Opetushallitus/konfo-ui",
+        "github.com/Opetushallitus/kouta-backend",
+        "github.com/Opetushallitus/kouta-external",
+        "github.com/Opetushallitus/kouta-indeksoija",
+        "github.com/Opetushallitus/kouta-internal",
+        "github.com/Opetushallitus/kouta-ui",
+        "github.com/Opetushallitus/kto-ui-common",
+        "github.com/Opetushallitus/tarjonta",
+        "github.com/Opetushallitus/tarjonta-api-dokumentaatio",
+      ]
+    },
+    {
+      viewName: "mpassid", title: "MPASSid - kirjautumisratkaisu koulutustoimijoille", repositories: [
+        "github.com/Opetushallitus/MPASSid-hallintapalvelu",
+      ]
+    },
+    {
+      viewName: "opiskelijavalinnan_palvelut", title: "Opiskelijavalinnan palvelut", repositories: [
+        "github.com/Opetushallitus/opiskelijavalinnat-local-setup",
+        "github.com/Opetushallitus/ovara",
+        "github.com/Opetushallitus/ovara-virkailija",
+        "github.com/Opetushallitus/seuranta",
+        "github.com/Opetushallitus/sijoittelu",
+        "github.com/Opetushallitus/valinta-sharedutils",
+        "github.com/Opetushallitus/valinta-tulos-service",
+        "github.com/Opetushallitus/valintalaskenta-ui",
+        "github.com/Opetushallitus/valintalaskenta",
+        "github.com/Opetushallitus/valintalaskentakoostepalvelu",
+        "github.com/Opetushallitus/valintaperusteet-ui",
+        "github.com/Opetushallitus/valintaperusteet",
+        "github.com/Opetushallitus/valintapiste-service",
+        "github.com/Opetushallitus/valintojen-toteuttaminen",
+      ]
+    },
+    {
+      viewName: "oppijan_henkilokohtaiset_palvelut", title: "Oppijan henkilökohtaiset palvelut", repositories: [
+        "github.com/Opetushallitus/oma-opintopolku",
+        "github.com/Opetushallitus/oma-opintopolku-loki",
+        "github.com/Opetushallitus/omatsivut",
+      ]
+    },
+    {
+      viewName: "tukipalvelut", title: "Tukipalvelut", repositories: [
+        "github.com/Opetushallitus/lokalisointi",
+        "github.com/Opetushallitus/maksut",
+        "github.com/Opetushallitus/viestintapalvelu",
+        "github.com/Opetushallitus/viestinvalityspalvelu",
+        "github.com/Opetushallitus/virkailija-raamit",
+        "github.com/Opetushallitus/virkailija-styles",
+        "github.com/Opetushallitus/virkailija-ui-components",
+        "github.com/Opetushallitus/virkailijan-tyopoyta",
+      ]
+    },
+    {
+      viewName: "varda", title: "Varhaiskasvatuksen tietovaranto Varda", repositories: [
+        "github.com/Opetushallitus/varda",
+      ]
+    },
   ]
+  const groupedRepositories = views.flatMap(view => view.repositories);
+  const remainingRepositories = allRepositories.filter(repo => !groupedRepositories.includes(repo));
+  views.push({ viewName: "muut", title: "Muut", repositories: remainingRepositories });
 
-  for (const output of outputs) {
-    await generateReportPage(output.title, output.filename, output.repositories);
-  }
+  const view = views.find(view => view.viewName === TRIVY_VIEW)
+  if (!view) throw new Error(`Invalid view ${TRIVY_VIEW}`)
+  await generateReportPage(view.title, view.viewName, view.repositories);
 }
 
-async function generateReportPage(title: string, reportFilename: string, repositories: string[]) {
+async function generateReportPage(title: string, viewName: string, repositories: string[]) {
+  console.log(`Generating Trivy report for ${repositories.length} repositories: ${repositories}`);
   // Directory to store Trivy reports
   const reportDir = path.resolve("trivy_reports");
   if (!fs.existsSync(reportDir)) {
@@ -94,7 +220,12 @@ async function generateReportPage(title: string, reportFilename: string, reposit
       findings.push({repoName, ...counts});
     } catch (error) {
       console.error(`Error scanning ${repo}:`, error);
-      process.exit(1)
+      if (viewName === "muut") {
+        console.log("Ignoring error for muut category because there are some strange repos that make Trivy fail")
+        findings.push({repoName, critical: -1, high: -1, medium: -1, low: -1});
+      } else {
+        process.exit(1)
+      }
     }
   });
 
@@ -156,7 +287,7 @@ async function generateReportPage(title: string, reportFilename: string, reposit
   `;
 
   // Save the HTML report
-  const reportPath = path.resolve(reportFilename);
+  const reportPath = path.resolve(`${viewName}.html`);
   fs.writeFileSync(reportPath, htmlTemplate, {encoding: "utf-8"});
 
   console.log(`HTML report generated: ${reportPath}`);

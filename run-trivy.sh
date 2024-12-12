@@ -11,9 +11,8 @@ function main {
   require_docker
   init_nodejs
   login_to_docker_if_possible
-  npx ts-node holes.ts
-  aws s3 cp ./trivy_report.html s3://oph-yleiskayttoiset-trivy-results/trivy_report.html
-  aws s3 cp ./muut.html s3://oph-yleiskayttoiset-trivy-results/muut.html
+  npx ts-node holes.ts "${TRIVY_VIEW}"
+  aws s3 cp ./${TRIVY_VIEW}.html s3://oph-yleiskayttoiset-trivy-results/${TRIVY_VIEW}.html
 }
 
 main "$@"

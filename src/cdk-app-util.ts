@@ -180,13 +180,31 @@ class TrivyRunnerStack extends cdk.Stack {
     );
     bucket.grantReadWrite(trivyProject);
 
-    const trivyAction = new codepipeline_actions.CodeBuildAction({
-      actionName: "Trivy",
-      input: sourceOutput,
-      project: trivyProject,
-    });
+    const trivyViews = [
+      "trivy_report",
+      "ehoks",
+      "eperusteet",
+      "kios",
+      "koski",
+      "kielitutkintorekisteri",
+      "koulutukseen_hakeutumisen_palvelut",
+      "koulutustarjonnan_palvelut",
+      "mpassid",
+      "opiskelijavalinnan_palvelut",
+      "oppijan_henkilokohtaiset_palvelut",
+      "tukipalvelut",
+      "varda",
+      "muut",
+    ]
     const stage = pipeline.addStage({ stageName: "Trivy" });
-    stage.addAction(trivyAction);
+    for (const TRIVY_VIEW of trivyViews) {
+      stage.addAction(new codepipeline_actions.CodeBuildAction({
+        actionName: `Trivy_${TRIVY_VIEW}`,
+        input: sourceOutput,
+        project: trivyProject,
+        environmentVariables: {TRIVY_VIEW: {value: TRIVY_VIEW}},
+      }));
+    }
   }
 }
 
