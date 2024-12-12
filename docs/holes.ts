@@ -115,7 +115,10 @@ async function generateReportPage(title: string, reportFilename: string, reposit
           table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #000; }
           .zero { background-color: blue; color: white; }
-          .non-zero { background-color: red; color: white; }
+          .critical { background-color: red; color: white; }
+          .high { background-color: orange; color: white; }
+          .medium { background-color: yellow; color: black; }
+          .low { background-color: cyan; color: black; }
       </style>
   </head>
   <body>
@@ -138,10 +141,10 @@ async function generateReportPage(title: string, reportFilename: string, reposit
       (finding) => `
                   <tr>
                       <td>${finding.repoName}</td>
-                      <td class="${finding.critical === 0 ? "zero" : "non-zero"}">${finding.critical}</td>
-                      <td class="${finding.high === 0 ? "zero" : "non-zero"}">${finding.high}</td>
-                      <td class="${finding.medium === 0 ? "zero" : "non-zero"}">${finding.medium}</td>
-                      <td class="${finding.low === 0 ? "zero" : "non-zero"}">${finding.low}</td>
+                      <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
+                      <td class="${finding.high === 0 ? "zero" : "high"}">${finding.high}</td>
+                      <td class="${finding.medium === 0 ? "zero" : "medium"}">${finding.medium}</td>
+                      <td class="${finding.low === 0 ? "zero" : "low"}">${finding.low}</td>
                   </tr>
               `
     )
