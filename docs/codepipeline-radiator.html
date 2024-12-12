@@ -37,6 +37,11 @@
          flex-direction: column;
      }
 
+     .card a {
+          color: inherit;
+         font-size: 1.2em;
+     }
+
      .card .stages {
         flex-grow: 1;
         display: flex;
@@ -100,17 +105,41 @@
          secretAccessKey: secret,
          region: region
      });
-     let ykCodepipeline = new AWS.CodePipeline();
-     let orgCodepipeline = new AWS.CodePipeline({
-         credentials: new AWS.ChainableTemporaryCredentials({
-             params: {RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader'}
-         })
-     });
-     let palveluvaylaCodepipeline = new AWS.CodePipeline({
-         credentials: new AWS.ChainableTemporaryCredentials({
-             params: {RoleArn: 'arn:aws:iam::414665903273:role/RadiatorReader'}
-         })
-      });
+
+      async function initAccounts() {
+          const yleiskayttoisetCredentials = AWS.config.credentials
+          const palveluvaylaCredentials = new AWS.ChainableTemporaryCredentials({
+              params: {RoleArn: 'arn:aws:iam::414665903273:role/RadiatorReader'}
+          })
+          const organisaatioCredentials = new AWS.ChainableTemporaryCredentials({
+              params: {RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader'}
+          })
+          const yleiskayttoisetPalvelut = {
+              accountName: 'yleiskayttoiset-palvelut',
+              accountId: await getAccountId(yleiskayttoisetCredentials),
+              adminRole: 'AdministratorAccess',
+              codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
+          }
+          const organisaatio = {
+              accountName: 'Organisaatiopalvelu',
+              accountId: await getAccountId(organisaatioCredentials),
+              adminRole: 'AdministratorAccess',
+              codepipeline: new AWS.CodePipeline({credentials: organisaatioCredentials}),
+          }
+          const palveluvayla = {
+              accountName: 'Palveluväylä',
+              accountId: await getAccountId(palveluvaylaCredentials),
+              adminRole: 'PalveluvaylaAdmins',
+              codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
+          }
+          return [yleiskayttoisetPalvelut, organisaatio, palveluvayla]
+      }
+
+      async function getAccountId(credentials) {
+          const sts = new AWS.STS({credentials});
+          const data = await sts.getCallerIdentity({}).promise();
+          return data.Account;
+      }
 
      function group(account, pipelines) {
          const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || account
@@ -149,35 +178,27 @@
          }
      }
      async function updatePipelines() {
-         const accounts = [{
-             account: "yleiskayttoiset-palvelut",
-             codepipeline: ykCodepipeline,
-         }, {
-             account: "Organisaatiopalvelu",
-             codepipeline: orgCodepipeline,
-         }, {
-             account: "Palveluväylä",
-             codepipeline: palveluvaylaCodepipeline,
-         }]
-         for (const {account, codepipeline} of accounts) {
+         const accounts = await initAccounts()
+         for (const account of accounts) {
+             const {accountName, accountId, codepipeline} = account
              try {
                  const data = await codepipeline.listPipelines({}).promise();
-                 const groups = group(account, data.pipelines.toSorted((a, b) => {
+                 const groups = group(accountName, data.pipelines.toSorted((a, b) => {
                      return sortableName(a.name).localeCompare(sortableName(b.name));
                  }))
                  for (const [project, pipelines] of Object.entries(groups)) {
-                     let header = document.getElementById(`header-${account}-${project}`)
+                     let header = document.getElementById(`header-${accountId}-${project}`)
                      if (!header) {
                          header = document.createElement('h1')
-                         header.id = `header-${account}-${project}`
+                         header.id = `header-${accountId}-${project}`
                          header.innerText = project
                          header.style.color = 'white'
                          document.body.appendChild(header)
                      }
-                     let row = document.getElementById(`row-${account}-${project}`)
+                     let row = document.getElementById(`row-${accountId}-${project}`)
                      if (!row) {
                          row = document.createElement('div')
-                         row.id = `row-${account}-${project}`
+                         row.id = `row-${accountId}-${project}`
                          row.className = 'card-row'
                          document.body.appendChild(row)
                      }
@@ -185,7 +206,7 @@
                      for (const pipeline of pipelines) {
                          const state = await pipelineState(codepipeline, pipeline.name)
                          const newCard = createCard(account, state);
-                         let card = document.getElementById(account + pipeline.name);
+                         let card = document.getElementById(accountId + pipeline.name);
                          if (card) {
                              card.replaceWith(newCard)
                          } else {
@@ -199,11 +220,25 @@
          }
      }
 
+     function pipelineUrl(pipelineName) {
+         return `https://eu-west-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/${pipelineName}/view?region=eu-west-1`
+     }
+
+     function awsUrl({accountId, adminRole}, destionationUrl) {
+         return `https://oph-aws-sso.awsapps.com/start/#/console?account_id=${accountId}&role_name=${adminRole}&destination=${encodeURIComponent(destionationUrl)}`
+     }
+
      function createCard(account, pipeline) {
          let card = document.createElement('div');
-         card.id = account + pipeline.name;
-         card.innerHTML = pipeline.name;
+         card.id = account.accountId + pipeline.name;
          card.className = 'card ' + pipeline.overallState
+
+         const title = document.createElement('a');
+         title.innerHTML = pipeline.name;
+         title.href = awsUrl(account, pipelineUrl(pipeline.name));
+         title.target = '_blank';
+         card.appendChild(title)
+
          const stages = document.createElement('div');
          stages.classList.add("stages");
          for (const stage of pipeline.stages) {
