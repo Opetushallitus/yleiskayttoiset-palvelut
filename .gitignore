@@ -2,5 +2,4 @@ node_modules
 .cdk.staging
 cdk.out
 .package-lock.json.checksum
-cdk.context.json
 .idea
