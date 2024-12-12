@@ -1,0 +1,97 @@
+{
+  "ssm:account=905418271050:parameterName=zoneName:region=eu-west-1": "util.yleiskayttoiset.opintopolku.fi",
+  "ssm:account=905418271050:parameterName=/env/hahtuva/account_id:region=eu-west-1": "471112979851",
+  "ssm:account=905418271050:parameterName=/env/hahtuva/region:region=eu-west-1": "eu-west-1",
+  "ssm:account=905418271050:parameterName=/env/dev/account_id:region=eu-west-1": "058264235340",
+  "ssm:account=905418271050:parameterName=/env/dev/region:region=eu-west-1": "eu-west-1",
+  "ssm:account=905418271050:parameterName=/env/qa/account_id:region=eu-west-1": "730335317715",
+  "ssm:account=905418271050:parameterName=/env/qa/region:region=eu-west-1": "eu-west-1",
+  "ssm:account=905418271050:parameterName=/env/prod/account_id:region=eu-west-1": "767397734142",
+  "ssm:account=905418271050:parameterName=/env/prod/region:region=eu-west-1": "eu-west-1",
+  "ssm:account=471112979851:parameterName=zoneName:region=eu-west-1": "hahtuva.yleiskayttoiset.opintopolku.fi",
+  "availability-zones:account=471112979851:region=eu-west-1": [
+    "eu-west-1a",
+    "eu-west-1b",
+    "eu-west-1c"
+  ],
+  "vpc-provider:account=471112979851:filter.tag:Name=vpc:region=eu-west-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-03b959fab410516fc",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "471112979851",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Ingress",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-04e3a7047f3e2bd2f",
+            "cidr": "10.0.0.0/20",
+            "availabilityZone": "eu-west-1a",
+            "routeTableId": "rtb-0d6469d03613fa1b0"
+          },
+          {
+            "subnetId": "subnet-011fdd742ed112593",
+            "cidr": "10.0.16.0/20",
+            "availabilityZone": "eu-west-1b",
+            "routeTableId": "rtb-0b0a46113bfd17193"
+          },
+          {
+            "subnetId": "subnet-077c24dd98cc0a744",
+            "cidr": "10.0.32.0/20",
+            "availabilityZone": "eu-west-1c",
+            "routeTableId": "rtb-02b161074ca043a9d"
+          }
+        ]
+      },
+      {
+        "name": "Database",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-015265bba38d2789c",
+            "cidr": "10.0.96.0/20",
+            "availabilityZone": "eu-west-1a",
+            "routeTableId": "rtb-0c3c0271ec0579a90"
+          },
+          {
+            "subnetId": "subnet-051ffae49101deb71",
+            "cidr": "10.0.112.0/20",
+            "availabilityZone": "eu-west-1b",
+            "routeTableId": "rtb-02af44f71bcdef20f"
+          },
+          {
+            "subnetId": "subnet-06499fcfa60fa71b7",
+            "cidr": "10.0.128.0/20",
+            "availabilityZone": "eu-west-1c",
+            "routeTableId": "rtb-0011172a8a56dd766"
+          }
+        ]
+      },
+      {
+        "name": "Application",
+        "type": "Private",
+        "subnets": [
+          {
+            "subnetId": "subnet-0604d739f6f1f6299",
+            "cidr": "10.0.48.0/20",
+            "availabilityZone": "eu-west-1a",
+            "routeTableId": "rtb-0d7ded54141c797ac"
+          },
+          {
+            "subnetId": "subnet-0054579e564a71af9",
+            "cidr": "10.0.64.0/20",
+            "availabilityZone": "eu-west-1b",
+            "routeTableId": "rtb-088f65851e8e23a3e"
+          },
+          {
+            "subnetId": "subnet-0851e246417642c69",
+            "cidr": "10.0.80.0/20",
+            "availabilityZone": "eu-west-1c",
+            "routeTableId": "rtb-062f3979a3c536565"
+          }
+        ]
+      }
+    ]
+  }
+}
