@@ -139,13 +139,30 @@ class TrivyRunnerStack extends cdk.Stack {
       });
     const sourceStage = pipeline.addStage({ stageName: "Source" });
     sourceStage.addAction(sourceAction);
+
+    const trivyViews = [
+      "trivy_report",
+      "ehoks",
+      "eperusteet",
+      "kios",
+      "koski",
+      "kielitutkintorekisteri",
+      "koulutukseen_hakeutumisen_palvelut",
+      "koulutustarjonnan_palvelut",
+      "mpassid",
+      "opiskelijavalinnan_palvelut",
+      "oppijan_henkilokohtaiset_palvelut",
+      "tukipalvelut",
+      "varda",
+      "muut",
+    ]
     const trivyProject = new codebuild.PipelineProject(
       this,
       `TrivyProject`,
       {
         projectName: `RunTrivy`,
         timeout: cdk.Duration.hours(2),
-        concurrentBuildLimit: 1,
+        concurrentBuildLimit: trivyViews.length,
         environment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
           computeType: codebuild.ComputeType.SMALL,
@@ -180,23 +197,6 @@ class TrivyRunnerStack extends cdk.Stack {
       },
     );
     bucket.grantReadWrite(trivyProject);
-
-    const trivyViews = [
-      "trivy_report",
-      "ehoks",
-      "eperusteet",
-      "kios",
-      "koski",
-      "kielitutkintorekisteri",
-      "koulutukseen_hakeutumisen_palvelut",
-      "koulutustarjonnan_palvelut",
-      "mpassid",
-      "opiskelijavalinnan_palvelut",
-      "oppijan_henkilokohtaiset_palvelut",
-      "tukipalvelut",
-      "varda",
-      "muut",
-    ]
     const stage = pipeline.addStage({ stageName: "Trivy" });
     for (const TRIVY_VIEW of trivyViews) {
       stage.addAction(new codepipeline_actions.CodeBuildAction({

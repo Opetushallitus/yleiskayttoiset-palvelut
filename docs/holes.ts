@@ -37,8 +37,9 @@ interface TrivyReport {
 }
 
 async function main() {
-  const allRepositories = await fetchRepositoriesWithoutAuth("Opetushallitus")
-    .then(repos => repos.filter(repo => !repo.archived).map(repo => `github.com/${repo.full_name}`));
+  const notArchived = await fetchRepositoriesWithoutAuth("Opetushallitus")
+    .then(repos => repos.filter(repo => !repo.archived));
+  const allRepositories = notArchived.map(repo => `github.com/${repo.full_name}`);
 
   const views: Array<TrivyView> = [
     {viewName: "trivy_report", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
@@ -167,7 +168,8 @@ async function main() {
 
   const view = views.find(view => view.viewName === TRIVY_VIEW)
   if (!view) throw new Error(`Invalid view ${TRIVY_VIEW}`)
-  await generateReportPage(view.title, view.viewName, view.repositories);
+  const actualRepositories = view.repositories.filter(repo => allRepositories.includes(repo));
+  await generateReportPage(view.title, view.viewName, actualRepositories);
 }
 
 async function generateReportPage(title: string, viewName: string, repositories: string[]) {
