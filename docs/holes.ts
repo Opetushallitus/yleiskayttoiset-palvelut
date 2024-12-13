@@ -204,8 +204,11 @@ async function generateReportPage(title: string, viewName: string, repositories:
     return {low, medium, high, critical};
   }
 
+  type ScanResult
+    = { repoName: string; error: false; low: number; medium: number; high: number; critical: number }
+    | { repoName: string; error: true; };
   // Run Trivy on each GitHub repository
-  const findings: { repoName: string; low: number; medium: number; high: number; critical: number }[] = [];
+  const findings: ScanResult[] = [];
 
   repositories.forEach((repo) => {
     const repoName = repo.split("/").slice(-2).join("_").replace(/\./g, "_"); // Convert "github.com/owner/repo" to "owner_repo"
@@ -219,12 +222,12 @@ async function generateReportPage(title: string, viewName: string, repositories:
           `docker run --rm --volume trivy-cache:/trivy-cache --volume ${reportDir}:/reports ${trivyImage} repo ${repo} --cache-dir /trivy-cache --scanners vuln --format json --output /reports/${repoName}_trivy.json`
       );
       const counts = countVulnerabilities(outputFile);
-      findings.push({repoName, ...counts});
+      findings.push({repoName, error: false, ...counts});
     } catch (error) {
       console.error(`Error scanning ${repo}:`, error);
       if (viewName === "muut") {
         console.log("Ignoring error for muut category because there are some strange repos that make Trivy fail")
-        findings.push({repoName, critical: -1, high: -1, medium: -1, low: -1});
+        findings.push({repoName, error: true });
       } else {
         process.exit(1)
       }
@@ -271,7 +274,12 @@ async function generateReportPage(title: string, viewName: string, repositories:
           <tbody>
               ${findings
     .map(
-      (finding) => `
+      (finding) => finding.error ? `
+                  <tr>
+                      <td>${finding.repoName}</td>
+                      <td colspan="4">Error scanning repository</td>
+                  </tr>
+                  ` : `
                   <tr>
                       <td>${finding.repoName}</td>
                       <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
