@@ -21,6 +21,7 @@
          grid-template-columns: 1fr 1fr 1fr 1fr;
          grid-auto-columns: 1fr;
          grid-gap: 10px;
+         margin-bottom: 20px;
      }
 
      .card {
@@ -35,6 +36,8 @@
          box-sizing: border-box;
          display: flex;
          flex-direction: column;
+
+         overflow: hidden;
      }
 
      .card a {
@@ -54,6 +57,7 @@
          flex-direction: column;
          border-radius: 4px;
      }
+
      .card .stage .action {
          text-align: left;
          display:flex;
@@ -62,6 +66,9 @@
          margin: 2px;
          padding: 3px;
          border-radius: 4px;
+
+         white-space: nowrap;
+         text-overflow: ellipsis;
      }
 
      @keyframes pulseYellow {
@@ -119,18 +126,35 @@
               accountId: await getAccountId(yleiskayttoisetCredentials),
               adminRole: 'AdministratorAccess',
               codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
+              environments: {
+                  //hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::471112979851:role/RadiatorReader'} }),
+                  //dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::058264235340:role/RadiatorReader'} }),
+                  //qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::730335317715:role/RadiatorReader'} }),
+                  //prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::767397734142:role/RadiatorReader'} }),
+              }
           }
           const organisaatio = {
               accountName: 'Organisaatiopalvelu',
               accountId: await getAccountId(organisaatioCredentials),
               adminRole: 'AdministratorAccess',
               codepipeline: new AWS.CodePipeline({credentials: organisaatioCredentials}),
+              environments: {
+                  hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::677276074218:role/RadiatorReader'} }),
+                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::536697232004:role/RadiatorReader'} }),
+                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::515966504732:role/RadiatorReader'} }),
+                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::448049787721:role/RadiatorReader'} }),
+              }
           }
           const palveluvayla = {
               accountName: 'Palveluväylä',
               accountId: await getAccountId(palveluvaylaCredentials),
               adminRole: 'PalveluvaylaAdmins',
               codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
+              environments: {
+                  //dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::734500016638:role/RadiatorReader'} }),
+                  //qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::242002376717:role/RadiatorReader'} }),
+                  //prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::483525580404:role/RadiatorReader'} }),
+              }
           }
           return [yleiskayttoisetPalvelut, organisaatio, palveluvayla]
       }
@@ -195,17 +219,11 @@
                          header.style.color = 'white'
                          document.body.appendChild(header)
                      }
-                     let row = document.getElementById(`row-${accountId}-${project}`)
-                     if (!row) {
-                         row = document.createElement('div')
-                         row.id = `row-${accountId}-${project}`
-                         row.className = 'card-row'
-                         document.body.appendChild(row)
-                     }
+                       const row = mkRow(`row-${accountId}-${project}`)
 
                      for (const pipeline of pipelines) {
                          const state = await pipelineState(codepipeline, pipeline.name)
-                         const newCard = createCard(account, state);
+                         const newCard = createPipelineCard(account, state);
                          let card = document.getElementById(accountId + pipeline.name);
                          if (card) {
                              card.replaceWith(newCard)
@@ -214,10 +232,87 @@
                          }
                      }
                  }
+
+                 function mkRow(id) {
+                     let row = document.getElementById(id)
+                     if (!row) {
+                         row = document.createElement('div')
+                         row.id = id
+                         row.className = 'card-row'
+                         document.body.appendChild(row)
+                     }
+                     return row
+                 }
+
+                 function createAlarmCard(alarmCardId, envName, alarms) {
+                     let card = document.createElement('div');
+                     card.id = alarmCardId
+                     card.className = 'card Succeeded'
+
+                     const title = document.createElement('span');
+                     title.innerHTML = envName
+                     card.appendChild(title)
+
+                     const alarmsWrapper = document.createElement('div');
+                     alarmsWrapper.classList.add("stages");
+                     for (const alarm of alarms) {
+                         const alarmStateAsClass = alarm.StateValue === 'OK' ? 'Succeeded' : 'Failed'
+                         const alarmCard = document.createElement('div');
+                         alarmCard.className = 'stage ' + 'Succeeded'
+                         for (const action of [1]) {
+                             const actionCard = document.createElement('div');
+                             actionCard.innerHTML = alarm.AlarmName;
+                             actionCard.className = 'action ' + alarmStateAsClass
+                             alarmCard.appendChild(actionCard)
+                         }
+                         alarmsWrapper.appendChild(alarmCard)
+                     }
+                     card.appendChild(alarmsWrapper)
+                     return card
+
+                 }
+                 const alarmRow = mkRow(`alarm-row-${accountId}`)
+                 for (const [envName, credentials] of Object.entries(account.environments)) {
+                     try {
+                       console.log(envName, credentials)
+                       const allAlarms = await fetchAlarms(new AWS.CloudWatch({credentials}))
+                       const withoutAutoScaling = allAlarms.filter(alarm => !isAutoScalingAlarm(alarm))
+                       console.log(withoutAutoScaling)
+                         for (const alarm of withoutAutoScaling) {
+                             const alarmCardId = accountId + envName
+                             const alarmCard = createAlarmCard(alarmCardId, envName, withoutAutoScaling)
+                              const card = document.getElementById(alarmCardId);
+                             if (card) {
+                                 card.replaceWith(alarmCard)
+                             } else {
+                                 alarmRow.appendChild(alarmCard)
+                             }
+                         }
+                     } catch (err) {
+                         console.log(err, err.stack);
+                     }
+                 }
              } catch (err) {
                  console.log(err, err.stack);
              }
          }
+     }
+
+     function isAutoScalingAlarm(alarm) {
+          const alarmActions = alarm.AlarmActions ?? []
+         return alarmActions.find(action => action.startsWith("arn:aws:autoscaling:"))
+     }
+
+     async function fetchAlarms(cwClient) {
+          async function exec(NextToken) {
+              const response = await cwClient.describeAlarms({ NextToken }).promise()
+              if (response.NextToken) {
+                  return [...alarms.MetricAlarms, await exec(response.NextToken)]
+              } else {
+                  return response.MetricAlarms
+              }
+          }
+         return await exec(undefined)
      }
 
      function pipelineUrl(pipelineName) {
@@ -228,7 +323,7 @@
          return `https://oph-aws-sso.awsapps.com/start/#/console?account_id=${accountId}&role_name=${adminRole}&destination=${encodeURIComponent(destionationUrl)}`
      }
 
-     function createCard(account, pipeline) {
+     function createPipelineCard(account, pipeline) {
          let card = document.createElement('div');
          card.id = account.accountId + pipeline.name;
          card.className = 'card ' + pipeline.overallState
