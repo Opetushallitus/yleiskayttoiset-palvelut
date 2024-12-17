@@ -156,9 +156,9 @@
               adminRole: 'PalveluvaylaAdmins',
               codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
               environments: {
-                  //dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::734500016638:role/RadiatorReader'} }),
-                  //qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::242002376717:role/RadiatorReader'} }),
-                  //prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::483525580404:role/RadiatorReader'} }),
+                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::734500016638:role/RadiatorReader'} }),
+                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::242002376717:role/RadiatorReader'} }),
+                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::483525580404:role/RadiatorReader'} }),
               }
           }
           return [yleiskayttoisetPalvelut, organisaatio, palveluvayla]
