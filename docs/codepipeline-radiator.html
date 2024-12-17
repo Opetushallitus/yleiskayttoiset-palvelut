@@ -132,10 +132,10 @@
               adminRole: 'AdministratorAccess',
               codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
               environments: {
-                  //hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::471112979851:role/RadiatorReader'} }),
-                  //dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::058264235340:role/RadiatorReader'} }),
-                  //qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::730335317715:role/RadiatorReader'} }),
-                  //prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::767397734142:role/RadiatorReader'} }),
+                  hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::471112979851:role/RadiatorReader'} }),
+                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::058264235340:role/RadiatorReader'} }),
+                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::730335317715:role/RadiatorReader'} }),
+                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::767397734142:role/RadiatorReader'} }),
               }
           }
           const organisaatio = {
