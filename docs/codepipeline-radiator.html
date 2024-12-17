@@ -275,7 +275,11 @@
                  for (const [envName, credentials] of Object.entries(account.environments)) {
                      try {
                        console.log(envName, credentials)
-                       const allAlarms = await fetchAlarms(new AWS.CloudWatch({credentials}))
+                       const allAlarms = [
+                         // Special case for HealthCheck alarms that live on us-east-1 region
+                         ...await fetchAlarms(new AWS.CloudWatch({credentials, region: 'us-east-1'})),
+                         ...await fetchAlarms(new AWS.CloudWatch({credentials})),
+                       ]
                        const withoutAutoScaling = allAlarms.filter(alarm => !isAutoScalingAlarm(alarm))
                        console.log(withoutAutoScaling)
                          for (const alarm of withoutAutoScaling) {
