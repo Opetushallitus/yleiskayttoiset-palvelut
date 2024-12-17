@@ -35,6 +35,17 @@ class AlarmStack extends cdk.Stack {
     alarmTopic.addSubscription(
       new subscriptions.LambdaSubscription(alarmsToSlackLambda),
     );
+
+    const radiatorAccountId = "905418271050"
+    const radiatorReader = new iam.Role(this, "RadiatorReaderRole", {
+      assumedBy: new iam.AccountPrincipal(radiatorAccountId),
+      roleName: "RadiatorReader",
+    })
+    radiatorReader.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["cloudwatch:DescribeAlarms"],
+      resources: ["*"],
+    }))
   }
 
   createAlarmTopic() {
