@@ -40,11 +40,6 @@
          overflow: hidden;
      }
 
-     .card.alarm {
-         color: white;
-         background-color: #428ac8;
-     }
-
      .card a {
           color: inherit;
          font-size: 1.2em;
@@ -71,9 +66,17 @@
          margin: 2px;
          padding: 3px;
          border-radius: 4px;
+     }
 
+     .card.alarm {
+         color: white;
+         background-color: #428ac8;
+     }
+     .card.alarm .action {
+         display: block;
          white-space: nowrap;
          text-overflow: ellipsis;
+         overflow: hidden;
      }
 
      @keyframes pulseYellow {
