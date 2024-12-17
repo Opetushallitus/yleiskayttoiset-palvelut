@@ -229,17 +229,6 @@
                      }
                  }
 
-                 function mkRow(id) {
-                     let row = document.getElementById(id)
-                     if (!row) {
-                         row = document.createElement('div')
-                         row.id = id
-                         row.className = 'card-row'
-                         document.body.appendChild(row)
-                     }
-                     return row
-                 }
-
                  function createAlarmCard(envName, alarms) {
                      let card = document.createElement('div');
                      card.classList.add('card', 'alarm')
@@ -293,9 +282,9 @@
      }
 
       function replaceOrAppendById(id, parent, element) {
+          element.id = id
           let existing = document.getElementById(id)
           if (!existing) {
-              element.id = id
               parent.appendChild(element)
           } else {
               existing.replaceWith(element)
