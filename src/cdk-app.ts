@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { DnsStack } from "./dns";
 import * as constructs from "constructs";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as lambda from "aws-cdk-lib/aws-lambda";
