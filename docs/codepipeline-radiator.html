@@ -40,6 +40,11 @@
          overflow: hidden;
      }
 
+     .card.alarm {
+         color: white;
+         background-color: #428ac8;
+     }
+
      .card a {
           color: inherit;
          font-size: 1.2em;
@@ -211,25 +216,16 @@
                      return sortableName(a.name).localeCompare(sortableName(b.name));
                  }))
                  for (const [project, pipelines] of Object.entries(groups)) {
-                     let header = document.getElementById(`header-${accountId}-${project}`)
-                     if (!header) {
-                         header = document.createElement('h1')
-                         header.id = `header-${accountId}-${project}`
-                         header.innerText = project
-                         header.style.color = 'white'
-                         document.body.appendChild(header)
-                     }
-                       const row = mkRow(`row-${accountId}-${project}`)
+                     const header = findOrAppendById('h1', `header-${accountId}-${project}`, document.body)
+                     header.innerText = project
+                     header.style.color = 'white'
+
+                     const row = findOrAppendById('div', `row-${accountId}-${project}`, document.body)
+                     row.className = 'card-row'
 
                      for (const pipeline of pipelines) {
                          const state = await pipelineState(codepipeline, pipeline.name)
-                         const newCard = createPipelineCard(account, state);
-                         let card = document.getElementById(accountId + pipeline.name);
-                         if (card) {
-                             card.replaceWith(newCard)
-                         } else {
-                             row.appendChild(newCard);
-                         }
+                         replaceOrAppendById(accountId + pipeline.name, row, createPipelineCard(account, state))
                      }
                  }
 
@@ -244,12 +240,11 @@
                      return row
                  }
 
-                 function createAlarmCard(alarmCardId, envName, alarms) {
+                 function createAlarmCard(envName, alarms) {
                      let card = document.createElement('div');
-                     card.id = alarmCardId
-                     card.className = 'card Succeeded'
+                     card.classList.add('card', 'alarm')
 
-                     const title = document.createElement('span');
+                     const title = document.createElement('a');
                      title.innerHTML = envName
                      card.appendChild(title)
 
@@ -271,35 +266,51 @@
                      return card
 
                  }
-                 const alarmRow = mkRow(`alarm-row-${accountId}`)
+                 const alarmRow = findOrAppendById('div', `alarm-header-${accountId}`, document.body)
+                 alarmRow.className = 'card-row'
                  for (const [envName, credentials] of Object.entries(account.environments)) {
+                     const alarmCardId = accountId + envName
                      try {
-                       console.log(envName, credentials)
-                       const allAlarms = [
-                         // Special case for HealthCheck alarms that live on us-east-1 region
-                         ...await fetchAlarms(new AWS.CloudWatch({credentials, region: 'us-east-1'})),
-                         ...await fetchAlarms(new AWS.CloudWatch({credentials})),
-                       ]
-                       const withoutAutoScaling = allAlarms.filter(alarm => !isAutoScalingAlarm(alarm))
-                       console.log(withoutAutoScaling)
-                         for (const alarm of withoutAutoScaling) {
-                             const alarmCardId = accountId + envName
-                             const alarmCard = createAlarmCard(alarmCardId, envName, withoutAutoScaling)
-                              const card = document.getElementById(alarmCardId);
-                             if (card) {
-                                 card.replaceWith(alarmCard)
-                             } else {
-                                 alarmRow.appendChild(alarmCard)
-                             }
-                         }
+                         const allAlarms = [
+                             // Special case for HealthCheck alarms that live on us-east-1 region
+                             ...await fetchAlarms(new AWS.CloudWatch({credentials, region: 'us-east-1'})),
+                             ...await fetchAlarms(new AWS.CloudWatch({credentials})),
+                         ]
+                         const withoutAutoScaling = allAlarms.filter(alarm => !isAutoScalingAlarm(alarm))
+                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envName, withoutAutoScaling))
                      } catch (err) {
                          console.log(err, err.stack);
+                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envName, [{
+                             AlarmName: `Error fetching alarms: ${err.message}`,
+                             StateValue: 'ALARM'
+                         }]))
                      }
                  }
              } catch (err) {
                  console.log(err, err.stack);
              }
          }
+     }
+
+      function replaceOrAppendById(id, parent, element) {
+          let existing = document.getElementById(id)
+          if (!existing) {
+              element.id = id
+              parent.appendChild(element)
+          } else {
+              existing.replaceWith(element)
+          }
+          return element
+      }
+
+     function findOrAppendById(type, id, parent) {
+         let element = document.getElementById(id)
+         if (!element) {
+             element = document.createElement(type)
+             element.id = id
+             parent.appendChild(element)
+         }
+         return element
      }
 
      function isAutoScalingAlarm(alarm) {
@@ -329,7 +340,6 @@
 
      function createPipelineCard(account, pipeline) {
          let card = document.createElement('div');
-         card.id = account.accountId + pipeline.name;
          card.className = 'card ' + pipeline.overallState
 
          const title = document.createElement('a');
