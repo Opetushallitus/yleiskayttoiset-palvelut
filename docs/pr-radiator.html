@@ -1,219 +1,175 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script type="text/javascript" src="github.js"></script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="120">
-    <title>PR Radiator</title>
+    <title>GitHub Pull Requests</title>
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100vw;
-        box-sizing: border-box;
-        font-family: Helvetica, Arial, sans-serif;
-        background-color: #000;
-      }
-
-      .cardContainer {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 10px;
-        padding: 10px;
-        justify-content: center;
-      }
-
-      .card {
-        box-sizing: border-box;
-        padding: 20px;
-        border: none; /* Remove border */
-        border-radius: 2px;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        word-wrap: break-word;
-        display: grid;
-        grid-template-areas:
-          "repo ."
-          "title title"
-          "branch branch";
-      }
-
-      .repo-name {
-        grid-area: repo;
-        align-self: start;
-        justify-self: end;
-        font-size: 1em;
-      }
-
-      .title {
-        grid-area: title;
-        font-size: 1.2em;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .branch-name {
-        grid-area: branch;
-        font-size: 1em;
-      }
-
-      .blue {
-        background-color: #428ac8;
-      }
-
-      .red{
-        background-color: #c84242;
-      }
-
-      .gray {
-        background-color: #808080
-      }
-
-      .repo-name,
-      .title,
-      .branch-name {
-        margin-bottom: 10px;
-      }
-
-      @keyframes pulseBlue {
-        0% {
-          background-color: #428ac8;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: black;
+            color: white;
         }
-        50% {
-          background-color: #72a2c8;
-        }
-        100% {
-          background-color: #428ac8;
-        }
-      }
 
-      @keyframes pulseRed {
-        0% {
-          background-color: #c84242;
+        .repository {
+            margin-bottom: 20px;
         }
-        50% {
-          background-color: #c87272;
+
+        .pr {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
         }
-        100% {
-          background-color: #c84242;
+
+        .pr.blue {
+            background-color: #add8e6;
         }
-      }
-      .blue.in-progress { animation: 2s infinite alternate pulseBlue; }
-      .red.in-progress { animation: 2s infinite alternate pulseRed; }
+
+        .pr.red {
+            background-color: #f08080;
+        }
+
+        .pr.yellow {
+            animation: pulse 1.5s infinite;
+            background-color: #ffeb3b;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-color: #ffeb3b;
+            }
+            50% {
+                background-color: #fff176;
+            }
+            100% {
+                background-color: #ffeb3b;
+            }
+        }
+
+        .timestamp {
+            font-size: 0.6em;
+            color: #ccc;
+            margin-left: 10px;
+        }
     </style>
-  </head>
-  <body>
-    <div id="prContainer" class="cardContainer"></div>
-    <script>
-      let token = localStorage.getItem("token") || "";
+    <script src="./github.js"></script>
+</head>
+<body>
+<h1>
+    GitHub Open Pull Requests
+    <span class="timestamp" id="timestamp"></span>
+</h1>
+<div id="content"></div>
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('GitHub token is missing! Please set it in localStorage with the key "token".');
+        throw new Error('GitHub token not found in localStorage.');
+    }
 
-      function getAge(pr) {
-        try {
-          return `(${Math.floor((Date.now() - new Date(pr.updated_at).getTime()) / (1000 * 60 * 60 * 24))}d)`;
-        } catch (e) {
-          return "";
-        }
-      }
+    const state = {};
 
-      function addPRToCard(repoName, pr) {
-        const card = document.createElement("div");
-        card.className = "pr-card";
-        card.dataset.prId = pr.id;
-        card.dataset.repoName = repoName;
-
-        const repoNameElement = document.createElement("div");
-        repoNameElement.className = "repo-name";
-        repoNameElement.innerText = `${repoName} ${getAge(pr)}`;
-        card.appendChild(repoNameElement);
-
-        const titleElement = document.createElement("div");
-        titleElement.className = "title";
-        titleElement.innerText = pr.title;
-        card.appendChild(titleElement);
-
-        const branchNameElement = document.createElement("div");
-        branchNameElement.className = "branch-name";
-        branchNameElement.innerText = pr.head.ref;
-        card.appendChild(branchNameElement);
-
-        fetchCheckRuns(repoName, pr.head.sha)
-          .then((checkRuns) => {
-            const inProgress = checkRuns.some(_ => _.status !== "completed")
-            const allChecksPassed = checkRuns.every(
-              (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
-            );
-            card.className += allChecksPassed ? " blue" : " red";
-            if (inProgress) card.className += " in-progress";
-          })
-          .catch((error) => {
-            card.className += " gray";
-          });
-
-        const prContainer = document.getElementById("prContainer");
-        prContainer.appendChild(card);
-      }
-
-     function getChecksStatusOfBranch(repoName, branch) {
-        return fetchCheckRuns(repoName, branch.commit.sha)
-          .then((checkRuns) => {
-            const inProgress = checkRuns.some(_ => _.status !== "completed")
-            const allChecksPassed = checkRuns.every(
-              (checkRun) => ["success", "skipped"].includes(checkRun.conclusion)
-            );
-            const color = allChecksPassed ? "blue" : "red"
-            return color + (inProgress ? " in-progress" : "")
-          })
-          .catch((error) => {
-            return "gray";
-          });
-     }
-
-      function updatePRs() {
-        GITHUB_REPOS.forEach((repoName) => {
-          fetchPulls(repoName)
-            .then((data) => {
-              data.sort((a, b) => b.number - a.number);
-
-              const prContainer = document.getElementById("prContainer");
-              const existingCards = Array.from(
-                prContainer.getElementsByClassName("pr-card")
-              ).filter(
-                (card) => card.dataset.repoName === repoName
-              );
-
-              data.forEach((pr) => {
-                const existingCard = existingCards.find(
-                  (card) => card.dataset.prId === pr.id.toString()
-                );
-
-                if (existingCard) {
-                  updateCard(existingCard, pr, repoName);
-                } else {
-                  addPRToCard(repoName, pr);
-                }
-              });
-
-              existingCards
-                .filter(
-                  (card) =>
-                    !data.some((pr) => pr.id.toString() === card.dataset.prId)
-                )
-                .forEach((card) => prContainer.removeChild(card));
-            });
+    async function fetchPullRequests(repo) {
+        const url = `https://api.github.com/repos/${repo}/pulls`;
+        const response = await fetch(url, {
+            headers: {Authorization: `token ${token}`}
         });
-      }
+        if (!response.ok) {
+            console.error(`Failed to fetch pull requests for ${repo}:`, response.statusText);
+            return [];
+        }
+        return response.json();
+    }
 
-      function updateCard(card, pr, repoName) {
-        card.getElementsByClassName("repo-name")[0].innerText = `${repoName} ${getAge(pr)}`;
-        card.getElementsByClassName("title")[0].innerText = pr.title;
-        card.getElementsByClassName("branch-name")[0].innerText = pr.head.ref;
-      }
+    async function fetchCheckRuns(repo, pr) {
+        const url = `https://api.github.com/repos/${repo}/commits/${pr.head.sha}/check-runs`;
+        const response = await fetch(url, {
+            headers: {Authorization: `token ${token}`}
+        });
+        if (!response.ok) {
+            console.error(`Failed to fetch check runs for PR ${pr.number} in ${repo}:`, response.statusText);
+            return {check_runs: []};
+        }
+        return response.json();
+    }
 
-     window.onload = function () {
-        updatePRs();
-      };
+    function getPRColor(checkRuns) {
+        const statuses = checkRuns.map(run => run.conclusion);
+        if (statuses.includes(null)) return 'yellow';
+        if (statuses.includes('failure')) return 'red';
+        return 'blue';
+    }
 
-      setInterval(updatePRs, UPDATE_INTERVAL);
-    </script>
-  </body>
+    function hasPRChanged(oldPR, newPR) {
+        return (
+            !oldPR ||
+            oldPR.title !== newPR.title ||
+            oldPR.number !== newPR.number ||
+            oldPR.color !== newPR.color
+        );
+    }
+
+    function updateTimestamp() {
+        const timestampElement = document.getElementById('timestamp');
+        const now = new Date();
+        timestampElement.textContent = `(Last updated: ${now.toLocaleTimeString()})`;
+    }
+
+    async function renderPRs() {
+        for (const repo of GITHUB_REPOS) {
+            const pullRequests = await fetchPullRequests(repo);
+            const currentPRs = {};
+
+            for (const pr of pullRequests) {
+                const checkRunsData = await fetchCheckRuns(repo, pr);
+                const color = getPRColor(checkRunsData.check_runs);
+
+                const prData = {title: pr.title, number: pr.number, color};
+                currentPRs[pr.number] = prData;
+
+                if (!state[repo]) state[repo] = {};
+                if (hasPRChanged(state[repo][pr.number], prData)) {
+                    const repoDiv = document.getElementById(repo) || createRepoDiv(repo);
+                    const prDiv = document.createElement('div');
+                    prDiv.classList.add('pr', color);
+                    prDiv.innerHTML = `<a href="${pr.html_url}" target="_blank">#${pr.number} - ${pr.title}</a>`;
+                    const existingPRDiv = document.getElementById(`${repo}-${pr.number}`);
+                    if (existingPRDiv) existingPRDiv.replaceWith(prDiv);
+                    else repoDiv.appendChild(prDiv);
+                    prDiv.id = `${repo}-${pr.number}`;
+                }
+            }
+
+            if (state[repo]) {
+                for (const prNumber of Object.keys(state[repo])) {
+                    if (!currentPRs[prNumber]) {
+                        const prDiv = document.getElementById(`${repo}-${prNumber}`);
+                        if (prDiv) prDiv.remove();
+                    }
+                }
+            }
+
+            state[repo] = currentPRs;
+        }
+
+        updateTimestamp();
+    }
+
+    function createRepoDiv(repo) {
+        const content = document.getElementById('content');
+        const repoDiv = document.createElement('div');
+        repoDiv.classList.add('repository');
+        repoDiv.id = repo;
+        repoDiv.innerHTML = `<h2>${repo}</h2>`;
+        content.appendChild(repoDiv);
+        return repoDiv;
+    }
+
+    repeatedly(renderPRs);
+</script>
+</body>
 </html>
