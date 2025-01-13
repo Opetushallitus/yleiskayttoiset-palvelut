@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="120">
     <title>GitHub Pull Requests</title>
+    <link rel="stylesheet" href="style.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: black;
-            color: white;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
 
         .repository {
@@ -26,27 +27,27 @@
         }
 
         .pr.blue {
-            background-color: #add8e6;
+            background-color: var(--color-blue);
         }
 
         .pr.red {
-            background-color: #f08080;
+            background-color: var(--color-red);
         }
 
         .pr.yellow {
             animation: pulse 1.5s infinite;
-            background-color: #ffeb3b;
+            background-color: var(--color-yellow);
         }
 
         @keyframes pulse {
             0% {
-                background-color: #ffeb3b;
+                background-color: var(--color-yellow);
             }
             50% {
-                background-color: #fff176;
+                background-color: var(--color-yellow-pulse);
             }
             100% {
-                background-color: #ffeb3b;
+                background-color: var(--color-yellow);
             }
         }
 
@@ -59,6 +60,13 @@
     <script src="./github.js"></script>
 </head>
 <body>
+
+<template id="template-pull-request">
+  <div class="pr">
+    <a class="pull-request-link" target="_blank"></a>
+  </div>
+</template>
+
 <h1>
     GitHub Open Pull Requests
     <span class="timestamp" id="timestamp"></span>
@@ -134,13 +142,16 @@
                 if (!state[repo]) state[repo] = {};
                 if (hasPRChanged(state[repo][pr.number], prData)) {
                     const repoDiv = document.getElementById(repo) || createRepoDiv(repo);
-                    const prDiv = document.createElement('div');
-                    prDiv.classList.add('pr', color);
-                    prDiv.innerHTML = `<a href="${pr.html_url}" target="_blank">#${pr.number} - ${pr.title}</a>`;
-                    const existingPRDiv = document.getElementById(`${repo}-${pr.number}`);
-                    if (existingPRDiv) existingPRDiv.replaceWith(prDiv);
-                    else repoDiv.appendChild(prDiv);
-                    prDiv.id = `${repo}-${pr.number}`;
+                    const element = document.getElementById("template-pull-request").content.cloneNode(true);
+                    element.querySelector("div").classList.add(color);
+                    element.querySelector("div").id = `${repo}-${pr.number}`;
+                    element.querySelector('.pull-request-link').href = pr.html_url;
+                    element.querySelector('.pull-request-link').textContent = `#${pr.number} - ${pr.title}`;
+
+                    const existing = document.getElementById(`${repo}-${pr.number}`);
+                    if (existing) existing.replaceWith(element);
+                    else repoDiv.appendChild(element);
+
                 }
             }
 
