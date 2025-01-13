@@ -24,6 +24,18 @@
             border-radius: 5px;
             display: flex;
             align-items: center;
+            gap: 20px;
+        }
+
+        .pull-request-link {
+            font-size: 2rem;
+        }
+
+        .pull-request-author-image {
+            max-height: 96px;
+            width: auto;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .pr.blue {
@@ -63,6 +75,7 @@
 
 <template id="template-pull-request">
   <div class="pr">
+    <img class="pull-request-author-image"/>
     <a class="pull-request-link" target="_blank"></a>
   </div>
 </template>
@@ -143,6 +156,7 @@
                 if (hasPRChanged(state[repo][pr.number], prData)) {
                     const repoDiv = document.getElementById(repo) || createRepoDiv(repo);
                     const element = document.getElementById("template-pull-request").content.cloneNode(true);
+                    element.querySelector('.pull-request-author-image').src = pr.user.avatar_url;
                     element.querySelector("div").classList.add(color);
                     element.querySelector("div").id = `${repo}-${pr.number}`;
                     element.querySelector('.pull-request-link').href = pr.html_url;
