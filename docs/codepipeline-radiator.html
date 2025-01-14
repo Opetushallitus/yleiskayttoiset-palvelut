@@ -135,16 +135,24 @@
           const organisaatioCredentials = new AWS.ChainableTemporaryCredentials({
               params: {RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader'}
           })
+          async function mkEnv(roleName, adminRole) {
+              const credentials = new AWS.ChainableTemporaryCredentials({ params: {RoleArn: roleName} })
+              return {
+                  accountId: await getAccountId(new AWS.ChainableTemporaryCredentials({params: {RoleArn: roleName}})),
+                  adminRole,
+                  credentials,
+              }
+          }
           const yleiskayttoisetPalvelut = {
               accountName: 'yleiskayttoiset-palvelut',
               accountId: await getAccountId(yleiskayttoisetCredentials),
               adminRole: 'AdministratorAccess',
               codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
               environments: {
-                  hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::471112979851:role/RadiatorReader'} }),
-                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::058264235340:role/RadiatorReader'} }),
-                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::730335317715:role/RadiatorReader'} }),
-                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::767397734142:role/RadiatorReader'} }),
+                  hahtuva: mkEnv('arn:aws:iam::471112979851:role/RadiatorReader', 'AdministratorAccess'),
+                  dev: mkEnv('arn:aws:iam::058264235340:role/RadiatorReader', 'AdministratorAccess'),
+                  qa: mkEnv('arn:aws:iam::730335317715:role/RadiatorReader', 'AdministratorAccess'),
+                  prod: mkEnv('arn:aws:iam::767397734142:role/RadiatorReader', 'AdministratorAccess'),
               }
           }
           const organisaatio = {
@@ -153,10 +161,10 @@
               adminRole: 'AdministratorAccess',
               codepipeline: new AWS.CodePipeline({credentials: organisaatioCredentials}),
               environments: {
-                  hahtuva: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::677276074218:role/RadiatorReader'} }),
-                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::536697232004:role/RadiatorReader'} }),
-                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::515966504732:role/RadiatorReader'} }),
-                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::448049787721:role/RadiatorReader'} }),
+                  hahtuva: mkEnv('arn:aws:iam::677276074218:role/RadiatorReader', 'AdministratorAccess'),
+                  dev: mkEnv('arn:aws:iam::536697232004:role/RadiatorReader', 'AdministratorAccess'),
+                  qa: mkEnv('arn:aws:iam::515966504732:role/RadiatorReader', 'AdministratorAccess'),
+                  prod: mkEnv('arn:aws:iam::448049787721:role/RadiatorReader', 'AdministratorAccess'),
               }
           }
           const palveluvayla = {
@@ -165,9 +173,9 @@
               adminRole: 'PalveluvaylaAdmins',
               codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
               environments: {
-                  dev: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::734500016638:role/RadiatorReader'} }),
-                  qa: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::242002376717:role/RadiatorReader'} }),
-                  prod: new AWS.ChainableTemporaryCredentials({ params: {RoleArn: 'arn:aws:iam::483525580404:role/RadiatorReader'} }),
+                  dev: mkEnv('arn:aws:iam::734500016638:role/RadiatorReader', 'PalveluvaylaAdmins'),
+                  qa: mkEnv('arn:aws:iam::242002376717:role/RadiatorReader', 'PalveluvaylaAdmins'),
+                  prod: mkEnv('arn:aws:iam::483525580404:role/RadiatorReader', 'PalveluvaylaAdmins'),
               }
           }
           return [yleiskayttoisetPalvelut, organisaatio, palveluvayla]
@@ -238,12 +246,14 @@
                      }
                  }
 
-                 function createAlarmCard(envName, alarms) {
+                 function createAlarmCard(account, envName, alarms) {
                      let card = document.createElement('div');
                      card.classList.add('card', 'alarm')
 
                      const title = document.createElement('a');
                      title.innerHTML = envName
+                     title.href = awsUrl(account, cloudwatchUrl());
+                     title.target = '_blank';
                      card.appendChild(title)
 
                      const alarmsWrapper = document.createElement('div');
@@ -266,7 +276,9 @@
                  }
                  const alarmRow = findOrAppendById('div', `alarm-header-${accountId}`, document.body)
                  alarmRow.className = 'card-row'
-                 for (const [envName, credentials] of Object.entries(account.environments)) {
+                 for (const [envName, envAccountPromise] of Object.entries(account.environments)) {
+                     const envAccount = await envAccountPromise
+                     const { credentials } = envAccount
                      const alarmCardId = accountId + envName
                      try {
                          const allAlarms = [
@@ -275,10 +287,10 @@
                              ...await fetchAlarms(new AWS.CloudWatch({credentials})),
                          ]
                          const withoutAutoScaling = allAlarms.filter(alarm => !isAutoScalingAlarm(alarm))
-                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envName, withoutAutoScaling))
+                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envAccount, envName, withoutAutoScaling))
                      } catch (err) {
                          console.log(err, err.stack);
-                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envName, [{
+                         replaceOrAppendById(alarmCardId, alarmRow, createAlarmCard(envAccount, envName, [{
                              AlarmName: `Error fetching alarms: ${err.message}`,
                              StateValue: 'ALARM'
                          }]))
@@ -331,6 +343,10 @@
      function pipelineUrl(pipelineName) {
          return `https://eu-west-1.console.aws.amazon.com/codesuite/codepipeline/pipelines/${pipelineName}/view?region=eu-west-1`
      }
+
+      function cloudwatchUrl() {
+          return `https://eu-west-1.console.aws.amazon.com/cloudwatch/home?region=eu-west-1#alarmsV2:`
+      }
 
      function awsUrl({accountId, adminRole}, destionationUrl) {
          return `https://oph-aws-sso.awsapps.com/start/#/console?account_id=${accountId}&role_name=${adminRole}&destination=${encodeURIComponent(destionationUrl)}`
