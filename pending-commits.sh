@@ -13,16 +13,16 @@ function log_cmd {
 
 function print_pending_commits {
   echo "# Commits for qa -> prod"
-  log_cmd green-qa...green-prod && echo
+  log_cmd origin/green-qa...origin/green-prod && echo
 
   echo "# Commits for dev -> qa"
-  log_cmd green-dev...green-qa && echo
+  log_cmd origin/green-dev...origin/green-qa && echo
 
   echo "# Commits for hahtuva -> dev"
-  log_cmd green-hahtuva...green-dev && echo
+  log_cmd origin/green-hahtuva...origin/green-dev && echo
 
   echo "# Commits for origin/main-> hahtuva"
-  log_cmd origin/main...green-hahtuva && echo
+  log_cmd origin/main...origin/green-hahtuva && echo
 
   echo "# Commits for main -> origin/main"
   log_cmd main...origin/main && echo

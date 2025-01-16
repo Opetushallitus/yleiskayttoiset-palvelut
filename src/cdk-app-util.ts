@@ -55,15 +55,37 @@ class ContinousDeploymentStack extends cdk.Stack {
 
     new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props);
 
-    ["hahtuva", "dev", "qa", "prod"].forEach(
-      (env) =>
-        new ContinousDeploymentPipelineStack(
-          this,
-          `${capitalize(env)}ContinuousDeploymentPipeline`,
-          connection,
-          env,
-          props,
-        ),
+    new ContinousDeploymentPipelineStack(
+      this,
+      `HahtuvaContinuousDeploymentPipeline`,
+      connection,
+      "hahtuva",
+      { owner: "Opetushallitus", name: "yleiskayttoiset-palvelut", branch: "main" },
+      props,
+    );
+    new ContinousDeploymentPipelineStack(
+      this,
+      `DevContinuousDeploymentPipeline`,
+      connection,
+      "dev",
+      { owner: "Opetushallitus", name: "yleiskayttoiset-palvelut", branch: "green-hahtuva" },
+      props,
+    );
+    new ContinousDeploymentPipelineStack(
+      this,
+      `QaContinuousDeploymentPipeline`,
+      connection,
+      "qa",
+      { owner: "Opetushallitus", name: "yleiskayttoiset-palvelut", branch: "green-dev" },
+      props,
+    );
+    new ContinousDeploymentPipelineStack(
+      this,
+      `ProdContinuousDeploymentPipeline`,
+      connection,
+      "prod",
+      { owner: "Opetushallitus", name: "yleiskayttoiset-palvelut", branch: "green-qa" },
+      props,
     );
   }
 }
@@ -209,12 +231,19 @@ class TrivyRunnerStack extends cdk.Stack {
   }
 }
 
+type Repository = {
+  owner: string;
+  name: string;
+  branch: string;
+};
+
 class ContinousDeploymentPipelineStack extends cdk.Stack {
   constructor(
     scope: constructs.Construct,
     id: string,
     connection: codestarconnections.CfnConnection,
     env: string,
+    repository: Repository,
     props?: cdk.StackProps,
   ) {
     super(scope, id, props);
@@ -227,30 +256,15 @@ class ContinousDeploymentPipelineStack extends cdk.Stack {
         pipelineType: PipelineType.V1,
       },
     );
-    let tag;
-    switch (env) {
-      case "hahtuva":
-        tag = "main";
-        break;
-      case "dev":
-        tag = "green-hahtuva";
-        break;
-      case "qa":
-        tag = "green-dev";
-        break;
-      case "prod":
-        tag = "green-qa";
-        break;
-    }
     const sourceOutput = new codepipeline.Artifact();
     const sourceAction =
       new codepipeline_actions.CodeStarConnectionsSourceAction({
         actionName: "Source",
         connectionArn: connection.attrConnectionArn,
         codeBuildCloneOutput: true,
-        owner: "Opetushallitus",
-        repo: "yleiskayttoiset-palvelut",
-        branch: "main",
+        owner: repository.owner,
+        repo: repository.name,
+        branch: repository.branch,
         output: sourceOutput,
         triggerOnPush: env == "hahtuva",
       });
@@ -283,9 +297,6 @@ class ContinousDeploymentPipelineStack extends cdk.Stack {
             "git-credential-helper": "yes",
           },
           phases: {
-            pre_build: {
-              commands: [`git checkout ${tag}`],
-            },
             build: {
               commands: [
                 `./deploy-${env}.sh`,
