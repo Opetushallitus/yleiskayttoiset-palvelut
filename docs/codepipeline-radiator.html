@@ -202,13 +202,17 @@
              return a === 'Failed' || b === 'Failed' ? 'Failed' : a === 'InProgress' || b === 'InProgress' ? 'InProgress' : 'Succeeded';
          });
          const actions  = data.stageStates.flatMap(_ => _.actionStates)
-         const deployActionName =  name === "TrivyRunner" ? "Trivy" : "Deploy"
-         const lastDeploy = actions.find(a => a.actionName === deployActionName)?.latestExecution.lastStatusChange
+         const lastStage = data.stageStates[data.stageStates.length - 1]
+         const lastDeploy = lastStage.actionStates[0].latestExecution.lastStatusChange
+         const pipelineExecutionId = lastStage.latestExecution.pipelineExecutionId
+         const execution = await codepipeline.getPipelineExecution({ pipelineName: name, pipelineExecutionId }).promise()
+         const commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
 
          return {
              name: data.pipelineName,
              overallState,
              lastDeploy,
+             commit,
              stages: data.stageStates.map(stage => {
                  return {
                      name: stage.stageName,
@@ -379,6 +383,11 @@
          const lastDeploy = document.createElement('div');
          lastDeploy.innerText = formatTime(pipeline.lastDeploy)
          card.appendChild(lastDeploy)
+
+         const commit = document.createElement('div');
+         commit.innerText = pipeline.commit
+         commit.style.color = "#" + pipeline.commit.substr(0, 6)
+         card.appendChild(commit)
          return card
      }
 
