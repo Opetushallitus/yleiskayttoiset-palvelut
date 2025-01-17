@@ -104,6 +104,7 @@
     </style>
     <script src=
     "https://sdk.amazonaws.com/js/aws-sdk-2.410.0.min.js"></script>
+    <script src="toSorted.js"></script>
     <script>
       // Migrate local storage items to more descriptive names
       function renameLocalStorageItem(from, to) {
@@ -233,9 +234,9 @@
              const {accountName, accountId, codepipeline} = account
              try {
                  const data = await codepipeline.listPipelines({}).promise();
-                 const groups = group(accountName, data.pipelines.toSorted((a, b) => {
+                 const groups = group(accountName, toSorted((a, b) => {
                      return sortableName(a.name).localeCompare(sortableName(b.name));
-                 }))
+                 }, data.pipelines))
                  for (const [project, pipelines] of Object.entries(groups)) {
                      const header = findOrAppendById('h1', `header-${accountId}-${project}`, document.body)
                      header.innerText = project
