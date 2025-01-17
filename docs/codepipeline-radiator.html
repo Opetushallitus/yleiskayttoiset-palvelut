@@ -105,6 +105,7 @@
     <script src=
     "https://sdk.amazonaws.com/js/aws-sdk-2.410.0.min.js"></script>
     <script src="toSorted.js"></script>
+    <script src="groupBy.js"></script>
     <script>
       // Migrate local storage items to more descriptive names
       function renameLocalStorageItem(from, to) {
@@ -190,7 +191,7 @@
 
      function group(account, pipelines) {
          const groupFn = pipeline => pipeline.name.startsWith("Kayttooikeus") ? "Otuva" : pipeline.name.split("Deploy")[0] || account
-         return Object.groupBy(pipelines, groupFn)
+         return groupBy(pipelines, groupFn)
      }
      function sortableName(x) {
          return x.replace("Hahtuva", "1").replace("Dev", "2").replace("Qa", "3").replace("Prod", "4");
