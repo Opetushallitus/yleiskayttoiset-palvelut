@@ -12,6 +12,9 @@ async function fetchRadiatorData() {
     const organisaatioCredentials = new AWS.ChainableTemporaryCredentials({
         params: {RoleArn: 'arn:aws:iam::135808915479:role/RadiatorReader'}
     })
+    const koodistoCredentials = new AWS.ChainableTemporaryCredentials({
+        params: {RoleArn: 'arn:aws:iam::288761775028:role/RadiatorReader'}
+    })
 
     async function mkEnv(roleName, adminRole) {
         const credentials = new AWS.ChainableTemporaryCredentials({params: {RoleArn: roleName}})
@@ -46,6 +49,18 @@ async function fetchRadiatorData() {
             prod: mkEnv('arn:aws:iam::448049787721:role/RadiatorReader', 'AdministratorAccess'),
         }
     }
+    const koodisto = {
+        accountName: 'Koodisto',
+        accountId: await getAccountId(koodistoCredentials),
+        adminRole: 'AdministratorAccess',
+        codepipeline: new AWS.CodePipeline({credentials: koodistoCredentials}),
+        environments: {
+            hahtuva: mkEnv('arn:aws:iam::954976325537:role/RadiatorReader', 'AdministratorAccess'),
+            dev: mkEnv('arn:aws:iam::794038226354:role/RadiatorReader', 'AdministratorAccess'),
+            qa: mkEnv('arn:aws:iam::864899856617:role/RadiatorReader', 'AdministratorAccess'),
+            prod: mkEnv('arn:aws:iam::266735801024:role/RadiatorReader', 'AdministratorAccess'),
+        }
+    }
     const palveluvayla = {
         accountName: 'Palveluväylä',
         accountId: await getAccountId(palveluvaylaCredentials),
@@ -58,7 +73,7 @@ async function fetchRadiatorData() {
         }
     }
 
-    const accounts = [yleiskayttoisetPalvelut, organisaatio, palveluvayla]
+    const accounts = [yleiskayttoisetPalvelut, organisaatio, koodisto, palveluvayla]
     return { accounts: await Promise.all(accounts.map(fetchAccountState)) }
 }
 
@@ -75,7 +90,6 @@ async function fetchAccountState(account) {
             let service = {
                 id: `${accountId}-${project}`,
                 name: project,
-                alarmGroups: [],
                 pipelines: [],
             }
             for (const pipeline of pipelines) {
@@ -123,8 +137,12 @@ async function fetchAccountState(account) {
         console.log(`Fetching state for ${accountName} (${accountId}) complete`)
         return { id: accountId, services, alarmGroups }
     } catch (err) {
-        console.log(err, err.stack);
-        return [{ name: accountName + ` (${err.message})`, pipelines: [], alarmGroups: [] }]
+        services.push({
+            id: `${accountId}-${accountName}`,
+            name: `${accountName} (Error: ${err.message})`,
+            pipelines: [],
+        })
+        return { id: accountId, services, alarmGroups: [] }
     }
 }
 
@@ -136,15 +154,18 @@ function isAutoScalingAlarm(alarm) {
 async function pipelineState(account, codepipeline, name) {
     const data = await codepipeline.getPipelineState({ name }).promise();
     const overallState = data.stageStates.map(function (stage) {
-        return stage.latestExecution.status;
+        return stage.latestExecution?.status;
     }).reduce(function (a, b) {
         return a === 'Failed' || b === 'Failed' ? 'Failed' : a === 'InProgress' || b === 'InProgress' ? 'InProgress' : 'Succeeded';
     });
     const lastStage = data.stageStates[data.stageStates.length - 1]
-    const lastDeploy = lastStage.actionStates[0].latestExecution.lastStatusChange
-    const pipelineExecutionId = lastStage.latestExecution.pipelineExecutionId
-    const execution = await codepipeline.getPipelineExecution({ pipelineName: name, pipelineExecutionId }).promise()
-    const commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
+    const lastDeploy = lastStage.actionStates[0].latestExecution?.lastStatusChange
+    const pipelineExecutionId = lastStage.latestExecution?.pipelineExecutionId
+    let commit = "ffffff emt :("
+    if (pipelineExecutionId) {
+        const execution = await codepipeline.getPipelineExecution({pipelineName: name, pipelineExecutionId}).promise()
+        commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
+    }
 
     return {
         id: account.accountId + data.pipelineName,
@@ -156,7 +177,7 @@ async function pipelineState(account, codepipeline, name) {
         stages: data.stageStates.map(stage => {
             return {
                 name: stage.stageName,
-                status: stage.latestExecution.status,
+                status: stage.latestExecution?.status ?? 'Unknown',
                 actions: stage.actionStates.map(action => {
                     return {
                         name: action.actionName,
