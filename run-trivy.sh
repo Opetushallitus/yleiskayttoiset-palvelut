@@ -12,6 +12,7 @@ function main {
   init_nodejs
   login_to_docker_if_possible
   npx ts-node holes.ts "${TRIVY_VIEW}"
+  aws s3 cp --recursive ./trivy_reports s3://oph-yleiskayttoiset-trivy-results/trivy_reports
   aws s3 cp ./${TRIVY_VIEW}.html s3://oph-yleiskayttoiset-trivy-results/${TRIVY_VIEW}.html
 }
 

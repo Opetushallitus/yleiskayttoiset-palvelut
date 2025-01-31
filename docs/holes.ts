@@ -185,7 +185,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
   const trivyVersion = execSync(`docker run --rm ${trivyImage} --version`).toString().match(/Version:\s+(\S+)/)?.[1] || "Unknown";
 
   // Function to count vulnerabilities from a Trivy JSON report
-  function countVulnerabilities(reportPath: string): { low: number; medium: number; high: number; critical: number } {
+  function countVulnerabilities(reportPath: string): { reportPath: string; low: number; medium: number; high: number; critical: number } {
     const reportData: TrivyReport = JSON.parse(fs.readFileSync(reportPath, "utf-8"));
     let low = 0;
     let medium = 0;
@@ -201,11 +201,11 @@ async function generateReportPage(title: string, viewName: string, repositories:
       });
     });
 
-    return {low, medium, high, critical};
+    return {reportPath, low, medium, high, critical};
   }
 
   type ScanResult
-    = { repoName: string; error: false; low: number; medium: number; high: number; critical: number }
+    = { repoName: string; error: false; reportPath: string; low: number; medium: number; high: number; critical: number }
     | { repoName: string; error: true; };
   // Run Trivy on each GitHub repository
   const findings: ScanResult[] = [];
@@ -255,6 +255,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
           .high { background-color: orange; color: white; }
           .medium { background-color: yellow; color: black; }
           .low { background-color: cyan; color: black; }
+          a { color: white; }
       </style>
   </head>
   <body>
@@ -281,7 +282,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
                   </tr>
                   ` : `
                   <tr>
-                      <td>${finding.repoName}</td>
+                      <td><a href="${path.relative(__dirname, finding.reportPath)}">${finding.repoName}</a></td>
                       <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
                       <td class="${finding.high === 0 ? "zero" : "high"}">${finding.high}</td>
                       <td class="${finding.medium === 0 ? "zero" : "medium"}">${finding.medium}</td>
