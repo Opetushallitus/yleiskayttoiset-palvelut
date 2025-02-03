@@ -129,8 +129,40 @@ async function repeatedly(func) {
         const timeElapsed = Date.now() - start
         console.log(`Update complete in ${timeElapsed} ms`)
     } finally {
+        checkIfRadiatorFitsTheScreen()
         console.log(`Scheduling next update in ${UPDATE_INTERVAL} ms`)
         setTimeout(() => repeatedly(func), UPDATE_INTERVAL)
     }
 }
+
+function checkIfRadiatorFitsTheScreen() {
+    document.getElementById("ei-mahdu-varoitus").classList.remove("overflow")
+
+    const body = document.body
+    const html = document.documentElement
+
+    const bodyHeight = Math.max(
+        body.scrollHeight,
+        body.offsetHeight,
+        html.clientHeight,
+        html.scrollHeight,
+        html.offsetHeight
+    )
+    const bodyWidth = Math.max(
+        body.scrollWidth,
+        body.offsetWidth,
+        html.clientWidth,
+        html.scrollWidth,
+        html.offsetWidth
+    )
+
+    const viewportHeight = window.innerHeight
+    const viewportWidth = window.innerWidth
+
+    if (bodyHeight > viewportHeight || bodyWidth > viewportWidth) {
+        document.getElementById("ei-mahdu-varoitus").classList.add("overflow")
+    }
+}
+
 window.onload = () => repeatedly(updatePipelines)
+window.onresize = () => checkIfRadiatorFitsTheScreen;
