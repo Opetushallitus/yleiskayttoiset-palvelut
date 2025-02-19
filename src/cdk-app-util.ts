@@ -17,9 +17,11 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import {BucketAccessControl} from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {DnsStack} from "./dns";
+import * as clientssm from "@aws-sdk/client-ssm";
+import * as waf from "./waf";
 
 class CdkAppUtil extends cdk.App {
-  constructor(props: cdk.AppProps) {
+  constructor(props: cdk.AppProps & { allowedIps: string[] }) {
     super(props);
 
     const env = {
@@ -30,12 +32,14 @@ class CdkAppUtil extends cdk.App {
     new ContinousDeploymentStack(this, "ContinuousDeploymentStack", {
       env,
       hostedZone,
+      allowedIps: props.allowedIps,
     });
   }
 }
 
 type ContinousDeploymentStackProps = cdk.StackProps & {
   hostedZone: route53.IHostedZone,
+  allowedIps: string[],
 }
 class ContinousDeploymentStack extends cdk.Stack {
   constructor(scope: constructs.Construct, id: string, props: ContinousDeploymentStackProps) {
@@ -53,7 +57,7 @@ class ContinousDeploymentStack extends cdk.Stack {
       stringValue: connection.attrConnectionArn,
     });
 
-    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props);
+    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props.allowedIps, props);
 
     new ContinousDeploymentPipelineStack(
       this,
@@ -96,9 +100,13 @@ class TrivyRunnerStack extends cdk.Stack {
     id: string,
     connection: codestarconnections.CfnConnection,
     hostedZone: route53.IHostedZone,
+    allowedIps: string[],
     props?: cdk.StackProps,
   ) {
-    super(scope, id, props);
+    super(scope, id, {
+      crossRegionReferences: true,
+      ...props,
+    });
     const bucket = new s3.Bucket(this, "TrivyResultBucket", {
       bucketName: "oph-yleiskayttoiset-trivy-results",
       accessControl: BucketAccessControl.PRIVATE,
@@ -112,6 +120,12 @@ class TrivyRunnerStack extends cdk.Stack {
     })
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, "OriginAccessIdentity")
     bucket.grantRead(originAccessIdentity)
+
+    const wafStack = new waf.WafStack(this, "Waf", {
+      allowedIps,
+      ...props
+    });
+
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "trivy_report.html",
       domainNames: [domainName],
@@ -123,7 +137,8 @@ class TrivyRunnerStack extends cdk.Stack {
           minTtl: cdk.Duration.seconds(0),
           maxTtl: cdk.Duration.seconds(0),
         }),
-      }
+      },
+      webAclId: wafStack.webAcl.attrArn,
     })
     new route53.ARecord(this, "CloudFrontDnsRecord", {
       zone: hostedZone,
@@ -347,5 +362,17 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const app = new CdkAppUtil({});
-app.synth();
+async function getAllowedIPs() {
+  const ssmClient = new clientssm.SSMClient();
+  const command = new clientssm.GetParameterCommand({
+    Name: "/trivy/allowed-ips",
+  });
+  const response = await ssmClient.send(command);
+  const ipGroups = JSON.parse(response.Parameter!.Value!) as Record<string, string[]>;
+  return  Object.values(ipGroups).flat();
+}
+
+getAllowedIPs().then(ips => {
+  const app = new CdkAppUtil({allowedIps: ips});
+  app.synth();
+});

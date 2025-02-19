@@ -67,6 +67,7 @@ function bootstrap_cdk_for_env {
 
   if [ "${env}" == "util" ]; then
       npx cdk bootstrap "aws://${account_id}/${region}"
+      npx cdk bootstrap "aws://${account_id}/us-east-1"
   else
       npx cdk bootstrap "aws://${account_id}/${region}" \
           --trust "${util_account_id}" \
