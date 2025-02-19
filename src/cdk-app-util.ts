@@ -1,12 +1,20 @@
+import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
 import * as codestarconnections from "aws-cdk-lib/aws-codestarconnections";
 import * as cdk from "aws-cdk-lib";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as cloudfront_origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as codebuild from "aws-cdk-lib/aws-codebuild";
 import * as codepipeline from "aws-cdk-lib/aws-codepipeline";
 import {PipelineType} from "aws-cdk-lib/aws-codepipeline";
 import * as codepipeline_actions from "aws-cdk-lib/aws-codepipeline-actions";
 import * as constructs from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as events from "aws-cdk-lib/aws-events";
+import * as events_targets from "aws-cdk-lib/aws-events-targets";
 import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53_targets from "aws-cdk-lib/aws-route53-targets";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import {BucketAccessControl} from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {DnsStack} from "./dns";
 
@@ -45,6 +53,8 @@ class ContinousDeploymentStack extends cdk.Stack {
       stringValue: connection.attrConnectionArn,
     });
 
+    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props);
+
     new ContinousDeploymentPipelineStack(
       this,
       `HahtuvaContinuousDeploymentPipeline`,
@@ -77,6 +87,147 @@ class ContinousDeploymentStack extends cdk.Stack {
       { owner: "Opetushallitus", name: "yleiskayttoiset-palvelut", branch: "green-qa" },
       props,
     );
+  }
+}
+
+class TrivyRunnerStack extends cdk.Stack {
+  constructor(
+    scope: constructs.Construct,
+    id: string,
+    connection: codestarconnections.CfnConnection,
+    hostedZone: route53.IHostedZone,
+    props?: cdk.StackProps,
+  ) {
+    super(scope, id, props);
+    const bucket = new s3.Bucket(this, "TrivyResultBucket", {
+      bucketName: "oph-yleiskayttoiset-trivy-results",
+      accessControl: BucketAccessControl.PRIVATE,
+    })
+    const domainName = `trivy.util.yleiskayttoiset.opintopolku.fi`
+    const CLOUDFRONT_CERTIFICATE_REGION = "us-east-1";
+    const cert = new certificatemanager.DnsValidatedCertificate(this, "Certificate", {
+      domainName,
+      hostedZone,
+      region: CLOUDFRONT_CERTIFICATE_REGION,
+    })
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, "OriginAccessIdentity")
+    bucket.grantRead(originAccessIdentity)
+    const distribution = new cloudfront.Distribution(this, "Distribution", {
+      defaultRootObject: "trivy_report.html",
+      domainNames: [domainName],
+      certificate: cert,
+      defaultBehavior: {
+        origin: new cloudfront_origins.S3Origin(bucket, { originAccessIdentity }),
+        cachePolicy: new cloudfront.CachePolicy(this, "CachePolicy", {
+          defaultTtl: cdk.Duration.seconds(0),
+          minTtl: cdk.Duration.seconds(0),
+          maxTtl: cdk.Duration.seconds(0),
+        }),
+      }
+    })
+    new route53.ARecord(this, "CloudFrontDnsRecord", {
+      zone: hostedZone,
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(
+        new route53_targets.CloudFrontTarget(distribution)
+      )
+    })
+
+    const pipeline = new codepipeline.Pipeline(
+      this,
+      "TrivyRunnerPipeline",
+      {
+        pipelineName: "TrivyRunner",
+        pipelineType: PipelineType.V1,
+      },
+    );
+
+    new events.Rule(this, "TrivyRunnerSchedule", {
+      schedule: events.Schedule.cron({ hour: "1/4", minute: "0" }),
+      targets: [new events_targets.CodePipeline(pipeline)],
+    });
+
+    const sourceOutput = new codepipeline.Artifact();
+    const sourceAction =
+      new codepipeline_actions.CodeStarConnectionsSourceAction({
+        actionName: "Source",
+        connectionArn: connection.attrConnectionArn,
+        codeBuildCloneOutput: true,
+        owner: "Opetushallitus",
+        repo: "yleiskayttoiset-palvelut",
+        branch: "main",
+        output: sourceOutput,
+        triggerOnPush: false,
+      });
+    const sourceStage = pipeline.addStage({ stageName: "Source" });
+    sourceStage.addAction(sourceAction);
+
+    const trivyViews = [
+      "trivy_report",
+      "ehoks",
+      "eperusteet",
+      "kios",
+      "koski",
+      "kielitutkintorekisteri",
+      "koulutukseen_hakeutumisen_palvelut",
+      "koulutustarjonnan_palvelut",
+      "mpassid",
+      "opiskelijavalinnan_palvelut",
+      "oppijan_henkilokohtaiset_palvelut",
+      "tukipalvelut",
+      "varda",
+      "muut",
+    ]
+    const trivyProject = new codebuild.PipelineProject(
+      this,
+      `TrivyProject`,
+      {
+        projectName: `RunTrivy`,
+        timeout: cdk.Duration.hours(2),
+        concurrentBuildLimit: trivyViews.length,
+        environment: {
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+          computeType: codebuild.ComputeType.SMALL,
+          privileged: true,
+        },
+        environmentVariables: {
+          DOCKER_USERNAME: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: "/docker/username",
+          },
+          DOCKER_PASSWORD: {
+            type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+            value: "/docker/password",
+          },
+        },
+        buildSpec: codebuild.BuildSpec.fromObject({
+          version: "0.2",
+          env: {
+            "git-credential-helper": "yes",
+          },
+          phases: {
+            pre_build: {
+              commands: [
+                "docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD",
+              ]
+            },
+            build: {
+              commands: [`./run-trivy.sh`],
+            },
+          },
+        }),
+      },
+    );
+    bucket.grantReadWrite(trivyProject);
+    const stage = pipeline.addStage({ stageName: "Trivy" });
+    for (const TRIVY_VIEW of trivyViews) {
+      stage.addAction(new codepipeline_actions.CodeBuildAction({
+        actionName: `Trivy_${TRIVY_VIEW}`,
+        input: sourceOutput,
+        project: trivyProject,
+        environmentVariables: {TRIVY_VIEW: {value: TRIVY_VIEW}},
+      }));
+    }
   }
 }
 
