@@ -14,3 +14,13 @@
 body {
     font-family: Helvetica, Arial, sans-serif;
 }
+
+.trivy-radiator {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.trivy-graph {
+    max-width: 50%;
+}

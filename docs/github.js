@@ -201,7 +201,7 @@ async function fetchActionRuns(repoName) {
 }
 
 
-module.exports = {
+if (typeof module !== "undefined") module.exports = {
     GITHUB_REPOS,
     fetchRepositoriesWithoutAuth,
 }
