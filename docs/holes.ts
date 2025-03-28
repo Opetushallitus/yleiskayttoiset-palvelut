@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as cloudwatch from "@aws-sdk/client-cloudwatch";
 
 // Load repositories from github.js
 const {
@@ -15,6 +16,7 @@ const {
 } = require("./github.js");
 
 const TRIVY_VIEW = process.argv[2]
+const PUBLISH_METRICS = TRIVY_VIEW === "trivy_report"
 
 type TrivyView = {
   viewName: string;
@@ -233,6 +235,36 @@ async function generateReportPage(title: string, viewName: string, repositories:
       }
     }
   });
+
+  if (PUBLISH_METRICS) {
+    function makeMetric(repo: string, severity: "Critical" | "High" | "Medium" | "Low", value: number): cloudwatch.MetricDatum {
+      return {
+        MetricName: "TrivyReportedVulnerabilities",
+        Value: value,
+        Dimensions: [
+          { Name: "Repository", Value: repo },
+          { Name: "Severity", Value: severity },
+        ],
+      };
+    }
+
+    const cloudwatchClient = new cloudwatch.CloudWatchClient({ region: "eu-west-1" });
+    try {
+      const metrics = findings.flatMap(finding => finding.error ? [] : [
+        makeMetric(finding.repoName, "Critical", finding.critical),
+        makeMetric(finding.repoName, "High", finding.high),
+        makeMetric(finding.repoName, "Medium", finding.medium),
+        makeMetric(finding.repoName, "Low", finding.low),
+      ])
+      console.log("Publishing metrics: ", JSON.stringify(metrics))
+      cloudwatchClient.send(new cloudwatch.PutMetricDataCommand({
+        Namespace: "Trivy",
+        MetricData: metrics
+      }))
+    } catch (e) {
+      console.error("Error publishing metrics", e)
+    }
+  }
 
   // Generate the current date
   const currentDate = new Date().toLocaleString();

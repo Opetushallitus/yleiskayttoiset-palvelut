@@ -234,6 +234,15 @@ class TrivyRunnerStack extends cdk.Stack {
       },
     );
     bucket.grantReadWrite(trivyProject);
+    trivyProject.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["cloudwatch:PutMetricData"],
+      conditions: {
+        StringEquals: {
+          "cloudwatch:namespace": "Trivy",
+        },
+      }
+    }));
     const stage = pipeline.addStage({ stageName: "Trivy" });
     for (const TRIVY_VIEW of trivyViews) {
       stage.addAction(new codepipeline_actions.CodeBuildAction({
