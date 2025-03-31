@@ -14,6 +14,7 @@ async function main() {
     await makeGraph("Low")
 }
 async function makeGraph(sev) {
+    // MetricWidget syntax: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Metric-Widget-Structure.html
     const cmd = {
         MetricWidget: JSON.stringify({
             title: "Trivy reported " + sev + " vulnerabilities",
@@ -21,11 +22,11 @@ async function makeGraph(sev) {
             stacked: true,
             metrics: GITHUB_REPOS.flatMap(repo => {
                 const dim = repo.split("/").join("_").replace(/\./g, "_"); // Convert "owner/repo" to "owner_repo"
-                return [sev].map(sev => ["Trivy", "TrivyReportedVulnerabilities", "Repository", dim, "Severity", sev])
+                return [sev].map(sev => ["Trivy", "TrivyReportedVulnerabilities", "Repository", dim, "Severity", sev, { stat: "Average", period: 24 * 60 * 60 }])
             }),
             width: 1440/2,
             height: 2560/5,
-            start: "-P1D",
+            start: "-P30D",
             end: "P0D",
             yAxis: { left: { min: 0.0, max: 300.0 }}
         })
