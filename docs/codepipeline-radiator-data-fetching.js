@@ -162,6 +162,7 @@ async function fetchAccountState(account) {
         console.log(`Fetching state for ${accountName} (${accountId}) complete`)
         return { id: accountId, services, alarmGroups }
     } catch (err) {
+        console.error(err)
         services.push({
             id: `${accountId}-${accountName}`,
             name: `${accountName} (Error: ${err.message})`,
@@ -192,14 +193,17 @@ async function pipelineState(account, codepipeline, name) {
         commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
     }
 
-    const envBeingDeployed = data.pipelineName.toLowerCase().match("hahtuva|dev|qa|prod")[0]
-    const branchToCompare = envBeingDeployed === "prod" ? "green-qa"
-        : envBeingDeployed === "qa" ? "green-dev"
-        : (envBeingDeployed === "dev" && account.accountName === "Palveluväylä") ? account.mainBranch
-        : envBeingDeployed === "dev" ? "green-hahtuva"
-        : envBeingDeployed === "prod" ? "green-qa" : account.mainBranch;
-    const compare =  await compareCommits(account.repoName, `green-${envBeingDeployed}`, branchToCompare)
-    const pendingCommits = compare.ahead_by
+    let pendingCommits = 0
+    const envBeingDeployed = data.pipelineName.toLowerCase().match("hahtuva|dev|qa|prod")?.[0]
+    if (envBeingDeployed) {
+        const branchToCompare = envBeingDeployed === "prod" ? "green-qa"
+            : envBeingDeployed === "qa" ? "green-dev"
+            : (envBeingDeployed === "dev" && account.accountName === "Palveluväylä") ? account.mainBranch
+            : envBeingDeployed === "dev" ? "green-hahtuva"
+            : envBeingDeployed === "prod" ? "green-qa" : account.mainBranch;
+        const compare =  await compareCommits(account.repoName, `green-${envBeingDeployed}`, branchToCompare)
+        pendingCommits = compare.ahead_by
+    }
 
     return {
         id: account.accountId + data.pipelineName,
