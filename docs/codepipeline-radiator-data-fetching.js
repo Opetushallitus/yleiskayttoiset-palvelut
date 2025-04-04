@@ -33,6 +33,8 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(yleiskayttoisetCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
+        repoName: "Opetushallitus/yleiskayttoiset-palvelut",
+        mainBranch: "main",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::471112979851:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::058264235340:role/RadiatorReader', 'AdministratorAccess'),
@@ -45,6 +47,8 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(organisaatioCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: organisaatioCredentials}),
+        repoName: "Opetushallitus/organisaatio",
+        mainBranch: "master",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::677276074218:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::536697232004:role/RadiatorReader', 'AdministratorAccess'),
@@ -57,6 +61,8 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(koodistoCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: koodistoCredentials}),
+        repoName: "Opetushallitus/koodisto",
+        mainBranch: "master",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::954976325537:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::794038226354:role/RadiatorReader', 'AdministratorAccess'),
@@ -69,6 +75,8 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(viestinvalitysCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: viestinvalitysCredentials}),
+        repoName: "Opetushallitus/viestinvalityspalvelu",
+        mainBranch: "main",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::850995576855:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::329599639609:role/RadiatorReader', 'AdministratorAccess'),
@@ -81,6 +89,8 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(palveluvaylaCredentials),
         adminRole: 'PalveluvaylaAdmins',
         codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
+        repoName: "Opetushallitus/palveluvayla",
+        mainBranch: "main",
         environments: {
             dev: mkEnv('arn:aws:iam::734500016638:role/RadiatorReader', 'PalveluvaylaAdmins'),
             qa: mkEnv('arn:aws:iam::242002376717:role/RadiatorReader', 'PalveluvaylaAdmins'),
@@ -182,6 +192,15 @@ async function pipelineState(account, codepipeline, name) {
         commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
     }
 
+    const envBeingDeployed = data.pipelineName.toLowerCase().match("hahtuva|dev|qa|prod")[0]
+    const branchToCompare = envBeingDeployed === "prod" ? "green-qa"
+        : envBeingDeployed === "qa" ? "green-dev"
+        : (envBeingDeployed === "dev" && account.accountName === "Palveluväylä") ? account.mainBranch
+        : envBeingDeployed === "dev" ? "green-hahtuva"
+        : envBeingDeployed === "prod" ? "green-qa" : account.mainBranch;
+    const compare =  await compareCommits(account.repoName, `green-${envBeingDeployed}`, branchToCompare)
+    const pendingCommits = compare.ahead_by
+
     return {
         id: account.accountId + data.pipelineName,
         name: data.pipelineName,
@@ -189,6 +208,7 @@ async function pipelineState(account, codepipeline, name) {
         overallState,
         lastDeploy,
         commit,
+        pendingCommits,
         stages: data.stageStates.map(stage => {
             return {
                 name: stage.stageName,

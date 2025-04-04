@@ -100,6 +100,11 @@ function createPipelineCard(pipeline) {
     commit.innerText = pipeline.commit
     commit.style.color = "#" + pipeline.commit.substr(0, 6)
     card.appendChild(commit)
+    const pendingCommits = document.createElement('div');
+    pendingCommits.innerHTML = `Pending commits:<br/>${pipeline.pendingCommits}`;
+    const fontSize = Math.min(4, Math.max(pipeline.pendingCommits / 2, 1));
+    pendingCommits.style.fontSize = `${fontSize}em`;
+    card.appendChild(pendingCommits)
     return card
 }
 
@@ -120,7 +125,7 @@ function formatTime(date) {
     return dateFormat.format(date)
 }
 
-const UPDATE_INTERVAL = 5000
+const CODEPIPELINE_UPDATE_INTERVAL = 5000
 async function repeatedly(func) {
     try {
         console.log("Updating...")
@@ -130,8 +135,8 @@ async function repeatedly(func) {
         console.log(`Update complete in ${timeElapsed} ms`)
     } finally {
         checkIfRadiatorFitsTheScreen()
-        console.log(`Scheduling next update in ${UPDATE_INTERVAL} ms`)
-        setTimeout(() => repeatedly(func), UPDATE_INTERVAL)
+        console.log(`Scheduling next update in ${CODEPIPELINE_UPDATE_INTERVAL} ms`)
+        setTimeout(() => repeatedly(func), CODEPIPELINE_UPDATE_INTERVAL)
     }
 }
 

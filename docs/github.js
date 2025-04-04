@@ -23,6 +23,19 @@ async function repeatedly(func) {
     }
 }
 
+async function compareCommits(repoName, a, b) {
+    return await fetch(
+        `https://api.github.com/repos/${repoName}/compare/${a}...${b}`,
+        {
+            headers: {
+                Authorization: `token ${token}`,
+                Accept: "application/vnd.github.v3+json",
+                Accept: "application/vnd.github.antiope-preview+json",
+            },
+        }
+    ).then((response) => response.json());
+}
+
 async function fetchRepositoriesWithoutAuth(orgName) {
     const PER_PAGE = 100
     function fetchPage(page) {

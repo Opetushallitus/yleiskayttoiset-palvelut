@@ -110,14 +110,16 @@
      .InProgress { color: black; animation: 2s infinite alternate pulseYellow; }
 
     </style>
+    <script>
+        const token = localStorage.getItem("token") || "";
+    </script>
     <script src=
     "https://sdk.amazonaws.com/js/aws-sdk-2.410.0.min.js"></script>
     <script src="toSorted.js"></script>
     <script src="groupBy.js"></script>
+    <script src="github.js"></script>
     <script src="codepipeline-radiator-data-fetching.js"></script>
     <script src="codepipeline-radiator.js"></script>
-    <script>
-    </script>
 </head>
 <body>
 <h1 id="ei-mahdu-varoitus">Koko radiaattori ei mahdu scriinille :(</h1>
