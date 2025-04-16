@@ -101,7 +101,7 @@ function createPipelineCard(pipeline) {
     commit.style.color = "#" + pipeline.commit.substr(0, 6)
     card.appendChild(commit)
     const pendingCommits = document.createElement('div');
-    pendingCommits.innerHTML = `Pending commits:<br/>${pipeline.pendingCommits}`;
+    pendingCommits.innerHTML = `Pending commits: ${pipeline.pendingCommits}`;
     const fontSize = Math.min(4, Math.max(pipeline.pendingCommits / 2, 1));
     pendingCommits.style.fontSize = `${fontSize}em`;
     card.appendChild(pendingCommits)
