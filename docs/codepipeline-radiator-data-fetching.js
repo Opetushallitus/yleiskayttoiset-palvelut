@@ -33,8 +33,6 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(yleiskayttoisetCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: yleiskayttoisetCredentials}),
-        repoName: "Opetushallitus/yleiskayttoiset-palvelut",
-        mainBranch: "main",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::471112979851:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::058264235340:role/RadiatorReader', 'AdministratorAccess'),
@@ -47,8 +45,6 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(organisaatioCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: organisaatioCredentials}),
-        repoName: "Opetushallitus/organisaatio",
-        mainBranch: "master",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::677276074218:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::536697232004:role/RadiatorReader', 'AdministratorAccess'),
@@ -61,8 +57,6 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(koodistoCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: koodistoCredentials}),
-        repoName: "Opetushallitus/koodisto",
-        mainBranch: "master",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::954976325537:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::794038226354:role/RadiatorReader', 'AdministratorAccess'),
@@ -75,8 +69,6 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(viestinvalitysCredentials),
         adminRole: 'AdministratorAccess',
         codepipeline: new AWS.CodePipeline({credentials: viestinvalitysCredentials}),
-        repoName: "Opetushallitus/viestinvalityspalvelu",
-        mainBranch: "main",
         environments: {
             hahtuva: mkEnv('arn:aws:iam::850995576855:role/RadiatorReader', 'AdministratorAccess'),
             dev: mkEnv('arn:aws:iam::329599639609:role/RadiatorReader', 'AdministratorAccess'),
@@ -89,8 +81,6 @@ async function fetchRadiatorData() {
         accountId: await getAccountId(palveluvaylaCredentials),
         adminRole: 'PalveluvaylaAdmins',
         codepipeline: new AWS.CodePipeline({credentials: palveluvaylaCredentials}),
-        repoName: "Opetushallitus/palveluvayla",
-        mainBranch: "main",
         environments: {
             dev: mkEnv('arn:aws:iam::734500016638:role/RadiatorReader', 'PalveluvaylaAdmins'),
             qa: mkEnv('arn:aws:iam::242002376717:role/RadiatorReader', 'PalveluvaylaAdmins'),
@@ -118,7 +108,8 @@ async function fetchAccountState(account) {
                 pipelines: [],
             }
             for (const pipeline of pipelines) {
-                const state = await pipelineState(account, codepipeline, pipeline.name)
+                const { tags } = await codepipeline.listTagsForResource({resourceArn: `arn:aws:codepipeline:eu-west-1:${accountId}:${pipeline.name}`}).promise();
+                const state = await pipelineState(account, codepipeline, pipeline.name, tags)
                 service.pipelines.push(state)
             }
             services.push(service)
@@ -177,7 +168,7 @@ function isAutoScalingAlarm(alarm) {
     return alarmActions.find(action => action.startsWith("arn:aws:autoscaling:"))
 }
 
-async function pipelineState(account, codepipeline, name) {
+async function pipelineState(account, codepipeline, name, tags) {
     const data = await codepipeline.getPipelineState({ name }).promise();
     const overallState = data.stageStates.map(function (stage) {
         return stage.latestExecution?.status;
@@ -193,16 +184,16 @@ async function pipelineState(account, codepipeline, name) {
         commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
     }
 
-    let pendingCommits = 0
-    const envBeingDeployed = data.pipelineName.toLowerCase().match("hahtuva|dev|qa|prod")?.[0]
-    if (envBeingDeployed) {
-        const branchToCompare = envBeingDeployed === "prod" ? "green-qa"
-            : envBeingDeployed === "qa" ? "green-dev"
-            : (envBeingDeployed === "dev" && account.accountName === "Palveluväylä") ? account.mainBranch
-            : envBeingDeployed === "dev" ? "green-hahtuva"
-            : envBeingDeployed === "prod" ? "green-qa" : account.mainBranch;
-        const compare =  await compareCommits(account.repoName, `green-${envBeingDeployed}`, branchToCompare)
+    const repo = tags.find(tag => tag.key === "Repository")?.value;
+    const fromBranch = tags.find(tag => tag.key === "FromBranch")?.value;
+    const toBranch = tags.find(tag => tag.key === "ToBranch")?.value;
+
+    let pendingCommits = undefined
+    if (repo && fromBranch && toBranch) {
+        const compare =  await compareCommits(repo, toBranch, fromBranch)
         pendingCommits = compare.ahead_by
+    } else {
+        console.log(`No repo or branches found for pipeline ${name}:`, tags)
     }
 
     return {
