@@ -267,7 +267,10 @@ async function generateReportPage(title: string, viewName: string, repositories:
   }
 
   // Generate the current date
-  const currentDate = new Date().toLocaleString();
+  const currentDate = new Date().toLocaleString('fi-FI', {
+    timeZone: 'Europe/Helsinki',
+    timeZoneName: 'short',
+  });
 
   // Generate HTML summary report
   const htmlTemplate = `
