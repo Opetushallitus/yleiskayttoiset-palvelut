@@ -179,6 +179,7 @@ class TrivyRunnerStack extends cdk.Stack {
 
     const trivyViews = [
       "trivy_report",
+      "kaikki",
       "ehoks",
       "eperusteet",
       "kios",

@@ -45,6 +45,7 @@ async function main() {
 
   const views: Array<TrivyView> = [
     {viewName: "trivy_report", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
+    {viewName: "kaikki", title: "Kaikki Opetushallituksen arkistoimattomat repositoryt", repositories: allRepositories},
     {
       viewName: "ehoks",
       title: "eHOKS - ammatillisen koulutuksen henkilökohtaisen osaamisen suunnitelma",
