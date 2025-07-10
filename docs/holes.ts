@@ -286,6 +286,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
           p { font-size: 0.9em; }
           table { width: 100%; border-collapse: collapse; margin-top: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: center; background-color: #000; }
+          th { cursor: pointer; }
           .zero { background-color: blue; color: white; }
           .critical { background-color: red; color: white; }
           .high { background-color: orange; color: white; }
@@ -293,13 +294,24 @@ async function generateReportPage(title: string, viewName: string, repositories:
           .low { background-color: cyan; color: black; }
           a { color: white; }
       </style>
+      <script type="text/javascript">
+          const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+          const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+              v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+              )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+          document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+              const table = th.closest('table');
+              Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+                  .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                  .forEach(tr => table.appendChild(tr) );
+          })));
+      </script>
   </head>
   <body>
       <h1>Trivy GitHub Vulnerability Report - ${title}</h1>
       <p>Report generated on: ${currentDate}</p>
       <p>Trivy Version: ${trivyVersion}</p>
       <table>
-          <thead>
               <tr>
                   <th>Repository</th>
                   <th>Kriittinen</th>
@@ -307,9 +319,8 @@ async function generateReportPage(title: string, viewName: string, repositories:
                   <th>Keskitaso</th>
                   <th>Matala</th>
               </tr>
-          </thead>
-          <tbody>
               ${findings
+    .sort((a, b) => a.repoName.localeCompare(b.repoName))
     .map(
       (finding) => finding.error ? `
                   <tr>
@@ -327,7 +338,6 @@ async function generateReportPage(title: string, viewName: string, repositories:
               `
     )
     .join("\n")}
-          </tbody>
       </table>
   </body>
   </html>
