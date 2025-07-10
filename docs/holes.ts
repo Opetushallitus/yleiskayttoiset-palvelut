@@ -228,8 +228,8 @@ async function generateReportPage(title: string, viewName: string, repositories:
       findings.push({repoName, error: false, ...counts});
     } catch (error) {
       console.error(`Error scanning ${repo}:`, error);
-      if (viewName === "muut") {
-        console.log("Ignoring error for muut category because there are some strange repos that make Trivy fail")
+      if (viewName === "muut" || viewName === "kaikki") {
+        console.log("Ignoring error because there are some strange repos that make Trivy fail")
         findings.push({repoName, error: true });
       } else {
         process.exit(1)
