@@ -242,7 +242,8 @@ class TrivyRunnerStack extends cdk.Stack {
         StringEquals: {
           "cloudwatch:namespace": "Trivy",
         },
-      }
+      },
+      resources: ["arn:aws:logs:*:*:*"],
     }));
     const stage = pipeline.addStage({ stageName: "Trivy" });
     for (const TRIVY_VIEW of trivyViews) {
