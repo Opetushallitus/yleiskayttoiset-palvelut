@@ -45,7 +45,6 @@ async function main() {
 
   const views: Array<TrivyView> = [
     {viewName: "trivy_report", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
-    {viewName: "kaikki", title: "Kaikki Opetushallituksen arkistoimattomat repositoryt", repositories: allRepositories},
     {
       viewName: "ehoks",
       title: "eHOKS - ammatillisen koulutuksen henkilökohtaisen osaamisen suunnitelma",
@@ -168,6 +167,7 @@ async function main() {
   const groupedRepositories = views.flatMap(view => view.repositories);
   const remainingRepositories = allRepositories.filter(repo => !groupedRepositories.includes(repo));
   views.push({ viewName: "muut", title: "Muut", repositories: remainingRepositories });
+  views.push({ viewName: "kaikki", title: "Kaikki Opetushallituksen arkistoimattomat repositoryt", repositories: allRepositories });
 
   const view = views.find(view => view.viewName === TRIVY_VIEW)
   if (!view) throw new Error(`Invalid view ${TRIVY_VIEW}`)
