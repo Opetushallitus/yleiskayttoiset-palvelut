@@ -319,10 +319,11 @@ async function generateReportPage(title: string, viewName: string, repositories:
                   <th>Matala</th>
               </tr>
               ${findings
-    .filter((f) => !f.error)
     .sort((a, b) => a.repoName.localeCompare(b.repoName))
     .map(
-      (finding) => `
+      (finding) => finding.error
+          ? ''
+          : `
               <tr>
                   <td><a href="${path.relative(__dirname, finding.reportPath)}">${finding.repoName}</a></td>
                   <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
