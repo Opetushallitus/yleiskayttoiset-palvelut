@@ -306,7 +306,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
         ? `<div class="errors">
             <p>Failed to scan the following repostories:</p>
             <ul>
-              ${errors.map((e) => `<li>${e.repoName}</li>`)}
+              ${errors.map((e) => `<li>${e.repoName}</li>`).join("\n")}
             </ul>
           </div>`
         : ''}
