@@ -294,7 +294,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
           .low { background-color: cyan; color: black; }
           a { color: white; }
       </style>
-      <script type="text/javascript">
+      <script type="text/javascript" defer>
           const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
           const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
               v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
