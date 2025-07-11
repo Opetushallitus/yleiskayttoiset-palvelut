@@ -304,7 +304,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
       <p>Trivy Version: ${trivyVersion}</p>
       ${errors.length
         ? `<div class="errors">
-            <p>Failed to scan the following repostories:</p>
+            <p>Failed to scan the following repositories:</p>
             <ul>
               ${errors.map((e) => `<li>${e.repoName}</li>`).join("\n")}
             </ul>
