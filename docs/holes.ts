@@ -273,6 +273,8 @@ async function generateReportPage(title: string, viewName: string, repositories:
     timeZoneName: 'short',
   });
 
+  const errors = findings.filter((f) => f.error)
+
   // Generate HTML summary report
   const htmlTemplate = `
   <!DOCTYPE html>
@@ -292,6 +294,7 @@ async function generateReportPage(title: string, viewName: string, repositories:
           .high { background-color: orange; color: white; }
           .medium { background-color: yellow; color: black; }
           .low { background-color: cyan; color: black; }
+          .errors { background-color: red; color: white; padding: 1rem; }
           a { color: white; }
       </style>
   </head>
@@ -299,6 +302,14 @@ async function generateReportPage(title: string, viewName: string, repositories:
       <h1>Trivy GitHub Vulnerability Report - ${title}</h1>
       <p>Report generated on: ${currentDate}</p>
       <p>Trivy Version: ${trivyVersion}</p>
+      ${errors.length
+        ? `<div class="errors">
+            <p>Failed to scan the following repostories:</p>
+            <ul>
+              ${errors.map((e) => `<li>${e.repoName}</li>`)}
+            </ul>
+          </div>`
+        : ''}
       <table>
               <tr>
                   <th>Repository</th>
@@ -308,22 +319,18 @@ async function generateReportPage(title: string, viewName: string, repositories:
                   <th>Matala</th>
               </tr>
               ${findings
+    .filter((f) => !f.error)
     .sort((a, b) => a.repoName.localeCompare(b.repoName))
     .map(
-      (finding) => finding.error ? `
-                  <tr>
-                      <td>${finding.repoName}</td>
-                      <td colspan="4">Error scanning repository</td>
-                  </tr>
-                  ` : `
-                  <tr>
-                      <td><a href="${path.relative(__dirname, finding.reportPath)}">${finding.repoName}</a></td>
-                      <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
-                      <td class="${finding.high === 0 ? "zero" : "high"}">${finding.high}</td>
-                      <td class="${finding.medium === 0 ? "zero" : "medium"}">${finding.medium}</td>
-                      <td class="${finding.low === 0 ? "zero" : "low"}">${finding.low}</td>
-                  </tr>
-              `
+      (finding) => `
+              <tr>
+                  <td><a href="${path.relative(__dirname, finding.reportPath)}">${finding.repoName}</a></td>
+                  <td class="${finding.critical === 0 ? "zero" : "critical"}">${finding.critical}</td>
+                  <td class="${finding.high === 0 ? "zero" : "high"}">${finding.high}</td>
+                  <td class="${finding.medium === 0 ? "zero" : "medium"}">${finding.medium}</td>
+                  <td class="${finding.low === 0 ? "zero" : "low"}">${finding.low}</td>
+              </tr>
+          `
     )
     .join("\n")}
       </table>
