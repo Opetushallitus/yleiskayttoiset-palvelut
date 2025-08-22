@@ -178,7 +178,7 @@ async function main() {
 async function generateReportPage(title: string, viewName: string, repositories: string[]) {
   console.log(`Generating Trivy report for ${repositories.length} repositories: ${repositories}`);
   // Directory to store Trivy reports
-  const reportDir = path.resolve("trivy_reports");
+  const reportDir = path.resolve("trivy_reports", viewName);
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, {recursive: true});
   }
