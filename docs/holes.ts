@@ -121,7 +121,6 @@ async function main() {
     },
     {
       viewName: "tukipalvelut", title: "Tukipalvelut", repositories: [
-        "github.com/Opetushallitus/viestinvalityspalvelu",
         "github.com/Opetushallitus/virkailija-styles",
         "github.com/Opetushallitus/virkailija-ui-components",
       ]
