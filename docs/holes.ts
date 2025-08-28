@@ -95,24 +95,12 @@ async function main() {
     },
     {
       viewName: "koulutukseen_hakeutumisen_palvelut", title: "Koulutukseen hakeutumisen palvelut", repositories: [
-        "github.com/Opetushallitus/ataru",
-        "github.com/Opetushallitus/haku",
-        "github.com/Opetushallitus/hakurekisteri",
-        "github.com/Opetushallitus/liiteri",
       ]
     },
     {
       viewName: "koulutustarjonnan_palvelut", title: "Koulutustarjonnan palvelut", repositories: [
-        "github.com/Opetushallitus/konfo-backend",
         "github.com/Opetushallitus/konfo-files",
-        "github.com/Opetushallitus/konfo-ui",
-        "github.com/Opetushallitus/kouta-backend",
-        "github.com/Opetushallitus/kouta-external",
-        "github.com/Opetushallitus/kouta-indeksoija",
-        "github.com/Opetushallitus/kouta-internal",
-        "github.com/Opetushallitus/kouta-ui",
         "github.com/Opetushallitus/kto-ui-common",
-        "github.com/Opetushallitus/tarjonta",
         "github.com/Opetushallitus/tarjonta-api-dokumentaatio",
       ]
     },
@@ -123,44 +111,74 @@ async function main() {
     },
     {
       viewName: "opiskelijavalinnan_palvelut", title: "Opiskelijavalinnan palvelut", repositories: [
-        "github.com/Opetushallitus/opiskelijavalinnat-local-setup",
-        "github.com/Opetushallitus/ovara",
-        "github.com/Opetushallitus/ovara-virkailija",
         "github.com/Opetushallitus/seuranta",
-        "github.com/Opetushallitus/sijoittelu",
-        "github.com/Opetushallitus/valinta-sharedutils",
-        "github.com/Opetushallitus/valinta-tulos-service",
-        "github.com/Opetushallitus/valintalaskenta-ui",
-        "github.com/Opetushallitus/valintalaskenta",
-        "github.com/Opetushallitus/valintalaskentakoostepalvelu",
-        "github.com/Opetushallitus/valintaperusteet-ui",
-        "github.com/Opetushallitus/valintaperusteet",
-        "github.com/Opetushallitus/valintapiste-service",
-        "github.com/Opetushallitus/valintojen-toteuttaminen",
       ]
     },
     {
       viewName: "oppijan_henkilokohtaiset_palvelut", title: "Oppijan henkilökohtaiset palvelut", repositories: [
-        "github.com/Opetushallitus/oma-opintopolku",
         "github.com/Opetushallitus/oma-opintopolku-loki",
-        "github.com/Opetushallitus/omatsivut",
       ]
     },
     {
       viewName: "tukipalvelut", title: "Tukipalvelut", repositories: [
-        "github.com/Opetushallitus/lokalisointi",
-        "github.com/Opetushallitus/maksut",
-        "github.com/Opetushallitus/viestintapalvelu",
         "github.com/Opetushallitus/viestinvalityspalvelu",
-        "github.com/Opetushallitus/virkailija-raamit",
         "github.com/Opetushallitus/virkailija-styles",
         "github.com/Opetushallitus/virkailija-ui-components",
-        "github.com/Opetushallitus/virkailijan-tyopoyta",
       ]
     },
     {
       viewName: "varda", title: "Varhaiskasvatuksen tietovaranto Varda", repositories: [
         "github.com/Opetushallitus/varda",
+      ]
+    },
+    {
+      viewName: "opiskelijavalinnat", title: "Opiskelijavalintojen palvelut ja kirjastot", repositories: [
+        "github.com/Opetushallitus/ataru",
+        "github.com/Opetushallitus/dokumenttipalvelu",
+        "github.com/Opetushallitus/elasticsearch-analysis-raudikko",
+        "github.com/Opetushallitus/haku",
+        "github.com/Opetushallitus/hakukohderyhmapalvelu",
+        "github.com/Opetushallitus/hakurekisteri",
+        "github.com/Opetushallitus/liiteri",
+        "github.com/Opetushallitus/konfo-backend",
+        "github.com/Opetushallitus/konfo-ui",
+        "github.com/Opetushallitus/kouta-backend",
+        "github.com/Opetushallitus/kouta-external",
+        "github.com/Opetushallitus/kouta-indeksoija",
+        "github.com/Opetushallitus/kouta-internal",
+        "github.com/Opetushallitus/kouta-ui",
+        "github.com/Opetushallitus/lokalisointi",
+        "github.com/Opetushallitus/maksut",
+        "github.com/Opetushallitus/ohjausparametrit",
+        "github.com/Opetushallitus/omatsivut",
+        "github.com/Opetushallitus/oma-opintopolku",
+        "github.com/Opetushallitus/opiskelijavalinnat-local-setup",
+        "github.com/Opetushallitus/opiskelijavalinnat-utils",
+        "github.com/Opetushallitus/oppijan-tunnistus",
+        "github.com/Opetushallitus/oppija-raamit",
+        "github.com/Opetushallitus/oti",
+        "github.com/Opetushallitus/ovara",
+        "github.com/Opetushallitus/ovara-virkailija",
+        "github.com/Opetushallitus/palaute",
+        "github.com/Opetushallitus/scala-group-emailer",
+        "github.com/Opetushallitus/scala-utils",
+        "github.com/Opetushallitus/sijoittelu",
+        "github.com/Opetushallitus/suorituspalvelu",
+        "github.com/Opetushallitus/tarjonta",
+        "github.com/Opetushallitus/tarjonta-pulssi",
+        "github.com/Opetushallitus/ulkoiset-rajapinnat",
+        "github.com/Opetushallitus/valintalaskenta",
+        "github.com/Opetushallitus/valintalaskenta-ui",
+        "github.com/Opetushallitus/valintalaskentakoostepalvelu",
+        "github.com/Opetushallitus/valintaperusteet",
+        "github.com/Opetushallitus/valintaperusteet-ui",
+        "github.com/Opetushallitus/valintapiste-service",
+        "github.com/Opetushallitus/valinta-sharedutils",
+        "github.com/Opetushallitus/valinta-tulos-service",
+        "github.com/Opetushallitus/valintojen-toteuttaminen",
+        "github.com/Opetushallitus/viestintapalvelu",
+        "github.com/Opetushallitus/virkailija-raamit",
+        "github.com/Opetushallitus/virkailijan-tyopoyta",
       ]
     },
   ]
