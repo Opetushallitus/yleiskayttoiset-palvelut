@@ -67,7 +67,6 @@ async function main() {
         "github.com/Opetushallitus/eperusteet-opintopolku",
         "github.com/Opetushallitus/eperusteet-pdf",
         "github.com/Opetushallitus/eperusteet-ui",
-        "github.com/Opetushallitus/eperusteet-vst-ui",
         "github.com/Opetushallitus/eperusteet-ylops",
         "github.com/Opetushallitus/eperusteet-ylops-ui",
         "github.com/Opetushallitus/eperusteet",
@@ -76,7 +75,6 @@ async function main() {
     {
       viewName: "kios", title: "KIOS - kieliosaamisen palvelut", repositories: [
         "github.com/Opetushallitus/kieli-ja-kaantajatutkinnot",
-        "github.com/Opetushallitus/vkt",
         "github.com/Opetushallitus/yki-frontend",
         "github.com/Opetushallitus/yki",
       ]
@@ -85,7 +83,6 @@ async function main() {
       viewName: "koski", title: "Koski - opintosuoritus- ja tutkintotietojen tietovaranto", repositories: [
         "github.com/Opetushallitus/koski",
         "github.com/Opetushallitus/koski-luovutuspalvelu",
-        "github.com/Opetushallitus/koski-mydata",
       ]
     },
     {
@@ -94,20 +91,8 @@ async function main() {
       ]
     },
     {
-      viewName: "koulutustarjonnan_palvelut", title: "Koulutustarjonnan palvelut", repositories: [
-        "github.com/Opetushallitus/konfo-files",
-        "github.com/Opetushallitus/kto-ui-common",
-        "github.com/Opetushallitus/tarjonta-api-dokumentaatio",
-      ]
-    },
-    {
       viewName: "mpassid", title: "MPASSid - kirjautumisratkaisu koulutustoimijoille", repositories: [
         "github.com/Opetushallitus/MPASSid-hallintapalvelu",
-      ]
-    },
-    {
-      viewName: "opiskelijavalinnan_palvelut", title: "Opiskelijavalinnan palvelut", repositories: [
-        "github.com/Opetushallitus/seuranta",
       ]
     },
     {
