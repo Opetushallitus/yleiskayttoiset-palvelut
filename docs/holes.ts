@@ -16,7 +16,7 @@ const {
 } = require("./github.js");
 
 const TRIVY_VIEW = process.argv[2]
-const PUBLISH_METRICS = TRIVY_VIEW === "trivy_report"
+const PUBLISH_METRICS = TRIVY_VIEW === "yleiskayttoiset"
 
 type TrivyView = {
   viewName: string;
@@ -44,7 +44,7 @@ async function main() {
   const allRepositories = notArchived.map(repo => `github.com/${repo.full_name}`);
 
   const views: Array<TrivyView> = [
-    {viewName: "trivy_report", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
+    {viewName: "yleiskayttoiset", title: "Yleiskäyttöiset Palvelut", repositories: yleiskayttoisetRepositories},
     {
       viewName: "ehoks",
       title: "eHOKS - ammatillisen koulutuksen henkilökohtaisen osaamisen suunnitelma",

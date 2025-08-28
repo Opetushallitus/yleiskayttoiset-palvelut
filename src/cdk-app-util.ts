@@ -127,7 +127,7 @@ class TrivyRunnerStack extends cdk.Stack {
     });
 
     const distribution = new cloudfront.Distribution(this, "Distribution", {
-      defaultRootObject: "trivy_report.html",
+      defaultRootObject: "yleiskayttoiset.html",
       domainNames: [domainName],
       certificate: cert,
       defaultBehavior: {
@@ -178,7 +178,7 @@ class TrivyRunnerStack extends cdk.Stack {
     sourceStage.addAction(sourceAction);
 
     const trivyViews = [
-      "trivy_report",
+      "yleiskayttoiset",
       "opiskelijavalinnat",
       "kaikki",
       "ehoks",
