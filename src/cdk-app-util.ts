@@ -186,7 +186,6 @@ class TrivyRunnerStack extends cdk.Stack {
       "kios",
       "koski",
       "kielitutkintorekisteri",
-      "koulutukseen_hakeutumisen_palvelut",
       "koulutustarjonnan_palvelut",
       "mpassid",
       "opiskelijavalinnan_palvelut",

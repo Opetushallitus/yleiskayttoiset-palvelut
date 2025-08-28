@@ -94,10 +94,6 @@ async function main() {
       ]
     },
     {
-      viewName: "koulutukseen_hakeutumisen_palvelut", title: "Koulutukseen hakeutumisen palvelut", repositories: [
-      ]
-    },
-    {
       viewName: "koulutustarjonnan_palvelut", title: "Koulutustarjonnan palvelut", repositories: [
         "github.com/Opetushallitus/konfo-files",
         "github.com/Opetushallitus/kto-ui-common",
