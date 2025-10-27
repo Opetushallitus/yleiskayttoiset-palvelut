@@ -92,20 +92,27 @@ function createPipelineCard(pipeline) {
         stages.appendChild(stageCard)
     }
     card.appendChild(stages)
-    const lastDeploy = document.createElement('div');
-    lastDeploy.innerText = formatTime(pipeline.lastDeploy)
-    card.appendChild(lastDeploy)
+    card.appendChild(html('div', footer => {
+        footer.className = 'card-footer'
+        footer.appendChild(html('div', (lastDeploy) => {
+            lastDeploy.className = 'last-deploy'
+            lastDeploy.innerText = formatTime(pipeline.lastDeploy)
+        }))
 
-    const commit = document.createElement('div');
-    commit.innerText = pipeline.commit
-    commit.style.color = "#" + pipeline.commit.substr(0, 6)
-    card.appendChild(commit)
-    const pendingCommits = document.createElement('div');
-    pendingCommits.innerHTML = `Pending commits: ${pipeline.pendingCommits}`;
-    const fontSize = Math.min(4, Math.max(pipeline.pendingCommits / 2, 1));
-    pendingCommits.style.fontSize = `${fontSize}em`;
-    card.appendChild(pendingCommits)
+        footer.appendChild(html('div', pendingCommits => {
+            pendingCommits.className = 'pending-commits'
+            pendingCommits.innerHTML = `Pending commits: ${pipeline.pendingCommits}`;
+            const fontSize = Math.min(4, Math.max(pipeline.pendingCommits / 2, 1));
+            pendingCommits.style.fontSize = `${fontSize}em`;
+        }))
+    }))
     return card
+}
+
+function html(type, fn) {
+    const element = document.createElement(type)
+    fn(element)
+    return element
 }
 
 const dateFormat = new Intl.DateTimeFormat('fi-FI', {

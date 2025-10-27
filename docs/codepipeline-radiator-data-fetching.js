@@ -177,12 +177,6 @@ async function pipelineState(account, codepipeline, name, tags) {
     });
     const lastStage = data.stageStates[data.stageStates.length - 1]
     const lastDeploy = lastStage.actionStates[0].latestExecution?.lastStatusChange
-    const pipelineExecutionId = lastStage.latestExecution?.pipelineExecutionId
-    let commit = "ffffff emt :("
-    if (pipelineExecutionId) {
-        const execution = await codepipeline.getPipelineExecution({pipelineName: name, pipelineExecutionId}).promise()
-        commit = execution.pipelineExecution.artifactRevisions.find(_ => _.name === "Artifact_Source_Source")?.revisionId
-    }
 
     const repo = tags.find(tag => tag.key === "Repository")?.value;
     const fromBranch = tags.find(tag => tag.key === "FromBranch")?.value;
@@ -202,7 +196,6 @@ async function pipelineState(account, codepipeline, name, tags) {
         pipelineUrl: awsUrl(account, pipelineUrl(data.pipelineName)),
         overallState,
         lastDeploy,
-        commit,
         pendingCommits,
         stages: data.stageStates.map(stage => {
             return {
