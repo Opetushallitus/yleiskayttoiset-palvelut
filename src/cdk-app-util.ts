@@ -21,7 +21,7 @@ import * as clientssm from "@aws-sdk/client-ssm";
 import * as waf from "./waf";
 
 class CdkAppUtil extends cdk.App {
-  constructor(props: cdk.AppProps & { allowedIps: string[] }) {
+  constructor(props: cdk.AppProps & { allowedIps: string[], allowedIpv6s: string[] }) {
     super(props);
 
     const env = {
@@ -33,6 +33,7 @@ class CdkAppUtil extends cdk.App {
       env,
       hostedZone,
       allowedIps: props.allowedIps,
+      allowedIpv6s: props.allowedIpv6s,
     });
   }
 }
@@ -40,6 +41,7 @@ class CdkAppUtil extends cdk.App {
 type ContinousDeploymentStackProps = cdk.StackProps & {
   hostedZone: route53.IHostedZone,
   allowedIps: string[],
+  allowedIpv6s: string[],
 }
 class ContinousDeploymentStack extends cdk.Stack {
   constructor(scope: constructs.Construct, id: string, props: ContinousDeploymentStackProps) {
@@ -57,7 +59,15 @@ class ContinousDeploymentStack extends cdk.Stack {
       stringValue: connection.attrConnectionArn,
     });
 
-    new TrivyRunnerStack(this, "TrivyRunnerStack", connection, props.hostedZone, props.allowedIps, props);
+    new TrivyRunnerStack(
+      this,
+      "TrivyRunnerStack",
+      connection,
+      props.hostedZone,
+      props.allowedIps,
+      props.allowedIpv6s,
+      props
+    );
 
     new ContinousDeploymentPipelineStack(
       this,
@@ -101,6 +111,7 @@ class TrivyRunnerStack extends cdk.Stack {
     connection: codestarconnections.CfnConnection,
     hostedZone: route53.IHostedZone,
     allowedIps: string[],
+    allowedIpv6s: string[],
     props?: cdk.StackProps,
   ) {
     super(scope, id, {
@@ -123,6 +134,7 @@ class TrivyRunnerStack extends cdk.Stack {
 
     const wafStack = new waf.WafStack(this, "Waf", {
       allowedIps,
+      allowedIpv6s,
       ...props
     });
 
@@ -384,7 +396,17 @@ async function getAllowedIPs() {
   return  Object.values(ipGroups).flat();
 }
 
-getAllowedIPs().then(ips => {
-  const app = new CdkAppUtil({allowedIps: ips});
+async function getAllowedIPV6s() {
+  const ssmClient = new clientssm.SSMClient();
+  const command = new clientssm.GetParameterCommand({
+    Name: "/trivy/allowed-ipv6s",
+  });
+  const response = await ssmClient.send(command);
+  const ipGroups = JSON.parse(response.Parameter!.Value!) as Record<string, string[]>;
+  return  Object.values(ipGroups).flat();
+}
+
+Promise.all([getAllowedIPs(), getAllowedIPV6s()]).then(([ips, ipv6s]) => {
+  const app = new CdkAppUtil({allowedIps: ips, allowedIpv6s: ipv6s});
   app.synth();
 });
