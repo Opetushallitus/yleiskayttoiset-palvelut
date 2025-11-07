@@ -102,6 +102,9 @@ async function fetchAccountState(account) {
             return sortableName(a.name).localeCompare(sortableName(b.name));
         }, data.pipelines))
         for (const [project, pipelines] of Object.entries(groups)) {
+            if (project === "TrivyRunner") {
+                continue
+            }
             let service = {
                 id: `${accountId}-${project}`,
                 name: project,
