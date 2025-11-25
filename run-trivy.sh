@@ -6,10 +6,10 @@ readonly node_version=$(cat "$repo/.nvmrc")
 
 function main {
   cd "$repo"
+  init_nodejs
   npm_ci_if_package_lock_has_changed
   cd "$repo/docs"
   require_docker
-  init_nodejs
   login_to_docker_if_possible
   npx ts-node holes.ts "${TRIVY_VIEW}"
   aws s3 cp --recursive ./trivy_reports s3://oph-yleiskayttoiset-trivy-results/trivy_reports
