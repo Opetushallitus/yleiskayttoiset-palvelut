@@ -186,9 +186,13 @@ async function pipelineState(account, codepipeline, name, tags) {
     const toBranch = tags.find(tag => tag.key === "ToBranch")?.value;
 
     let pendingCommits = undefined
+    let oldestPendingCommitDate = undefined
     if (repo && fromBranch && toBranch) {
         const compare =  await compareCommits(repo, toBranch, fromBranch)
         pendingCommits = compare.ahead_by
+        if (compare.commits && compare.commits.length > 0) {
+            oldestPendingCommitDate = new Date(compare.commits[0].commit.author.date)
+        }
     } else {
         console.log(`No repo or branches found for pipeline ${name}:`, tags)
     }
@@ -200,6 +204,7 @@ async function pipelineState(account, codepipeline, name, tags) {
         overallState,
         lastDeploy,
         pendingCommits,
+        oldestPendingCommitDate,
         stages: data.stageStates.map(stage => {
             return {
                 name: stage.stageName,

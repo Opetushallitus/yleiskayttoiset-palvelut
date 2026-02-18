@@ -92,18 +92,19 @@ function createPipelineCard(pipeline) {
         stages.appendChild(stageCard)
     }
     card.appendChild(stages)
+    if (pipeline.pendingCommits > 0) {
+        const isStale = isOlderThanOneWorkday(pipeline.oldestPendingCommitDate)
+        const emoji = isStale ? '🙀📦' : '📦'
+        card.appendChild(html('div', pendingCommits => {
+            pendingCommits.className = 'pending-commits'
+            pendingCommits.innerHTML = emoji;
+        }))
+    }
     card.appendChild(html('div', footer => {
         footer.className = 'card-footer'
         footer.appendChild(html('div', (lastDeploy) => {
             lastDeploy.className = 'last-deploy'
             lastDeploy.innerText = formatTime(pipeline.lastDeploy)
-        }))
-
-        footer.appendChild(html('div', pendingCommits => {
-            pendingCommits.className = 'pending-commits'
-            pendingCommits.innerHTML = `Pending commits: ${pipeline.pendingCommits}`;
-            const fontSize = Math.min(4, Math.max(pipeline.pendingCommits / 2, 1));
-            pendingCommits.style.fontSize = `${fontSize}em`;
         }))
     }))
     return card
@@ -113,6 +114,23 @@ function html(type, fn) {
     const element = document.createElement(type)
     fn(element)
     return element
+}
+
+function isOlderThanOneWorkday(date) {
+    if (!date) return false
+    const now = new Date()
+    const diffMs = now - date
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    const day = now.getDay() // 0=Sun, 1=Mon, ...
+    // On Monday, previous workday is Friday (3 calendar days ago)
+    // On Sunday, previous workday is Friday (2 calendar days ago)
+    // On Saturday, previous workday is Friday (1 calendar day ago)
+    // On Tue-Fri, previous workday is yesterday (1 calendar day ago)
+    const calendarDaysForOneWorkday =
+        day === 0 ? 2 : // Sunday
+        day === 1 ? 3 : // Monday
+        1                // Tue-Fri
+    return diffDays > calendarDaysForOneWorkday
 }
 
 const dateFormat = new Intl.DateTimeFormat('fi-FI', {
