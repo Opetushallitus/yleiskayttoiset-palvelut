@@ -1,1 +1,1 @@
-FROM aquasec/trivy:latest
+FROM aquasec/trivy:0.69.3
