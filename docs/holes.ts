@@ -182,7 +182,8 @@ async function generateReportPage(title: string, viewName: string, repositories:
   }
 
   // Docker Trivy image
-  const trivyImage = "aquasec/trivy:latest";
+  const trivyImage = "yk-trivy";
+  execSync(`docker build -t ${trivyImage} .`)
   const trivyVersion = execSync(`docker run --rm ${trivyImage} --version`).toString().match(/Version:\s+(\S+)/)?.[1] || "Unknown";
 
   // Function to count vulnerabilities from a Trivy JSON report
