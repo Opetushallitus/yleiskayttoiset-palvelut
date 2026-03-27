@@ -140,58 +140,62 @@
         timestampElement.textContent = `(Last updated: ${now.toLocaleTimeString()})`;
     }
 
+    function isSecurityPR(pr) {
+        return pr.labels && pr.labels.some(l => l.name.toLowerCase() === 'security');
+    }
+
     async function renderPRs() {
+        const allPRs = [];
         for (const repo of GITHUB_REPOS) {
             const pullRequests = await fetchPullRequests(repo);
-            const currentPRs = {};
-
             for (const pr of pullRequests) {
                 const checkRunsData = await fetchCheckRuns(repo, pr);
                 const color = getPRColor(checkRunsData.check_runs);
-
-                const prData = {title: pr.title, number: pr.number, color};
-                currentPRs[pr.number] = prData;
-
-                if (!state[repo]) state[repo] = {};
-                if (hasPRChanged(state[repo][pr.number], prData)) {
-                    const repoDiv = document.getElementById(repo) || createRepoDiv(repo);
-                    const element = document.getElementById("template-pull-request").content.cloneNode(true);
-                    element.querySelector('.pull-request-author-image').src = pr.user.avatar_url;
-                    element.querySelector("div").classList.add(color);
-                    element.querySelector("div").id = `${repo}-${pr.number}`;
-                    element.querySelector('.pull-request-link').href = pr.html_url;
-                    element.querySelector('.pull-request-link').textContent = `#${pr.number} - ${pr.title}`;
-
-                    const existing = document.getElementById(`${repo}-${pr.number}`);
-                    if (existing) existing.replaceWith(element);
-                    else repoDiv.appendChild(element);
-
-                }
+                allPRs.push({repo, pr, color});
             }
-
-            if (state[repo]) {
-                for (const prNumber of Object.keys(state[repo])) {
-                    if (!currentPRs[prNumber]) {
-                        const prDiv = document.getElementById(`${repo}-${prNumber}`);
-                        if (prDiv) prDiv.remove();
-                    }
-                }
-            }
-
-            state[repo] = currentPRs;
         }
+
+        const securityPRs = allPRs.filter(({pr}) => isSecurityPR(pr));
+        const otherPRs = allPRs.filter(({pr}) => !isSecurityPR(pr));
+
+        const content = document.getElementById('content');
+        content.innerHTML = '';
+
+        renderSection(content, securityPRs, securityPRs.length > 0 ? 'Security' : null);
+        renderSection(content, otherPRs, securityPRs.length > 0 ? 'Others' : null);
 
         updateTimestamp();
     }
 
-    function createRepoDiv(repo) {
-        const content = document.getElementById('content');
-        const repoDiv = document.createElement('div');
-        repoDiv.classList.add('repository');
-        repoDiv.id = repo;
-        repoDiv.innerHTML = `<h2>${repo}</h2>`;
-        content.appendChild(repoDiv);
-        return repoDiv;
+    function renderSection(container, prs, title) {
+        if (prs.length === 0) return;
+
+        if (title) {
+            const h2 = document.createElement('h2');
+            h2.textContent = title;
+            container.appendChild(h2);
+        }
+
+        const byRepo = {};
+        for (const {repo, pr, color} of prs) {
+            if (!byRepo[repo]) byRepo[repo] = [];
+            byRepo[repo].push({pr, color});
+        }
+
+        for (const [repo, repoPRs] of Object.entries(byRepo)) {
+            const repoDiv = document.createElement('div');
+            repoDiv.classList.add('repository');
+            repoDiv.innerHTML = `<h3>${repo}</h3>`;
+            for (const {pr, color} of repoPRs) {
+                const element = document.getElementById("template-pull-request").content.cloneNode(true);
+                element.querySelector('.pull-request-author-image').src = pr.user.avatar_url;
+                element.querySelector("div").classList.add(color);
+                element.querySelector('.pull-request-link').href = pr.html_url;
+                element.querySelector('.pull-request-link').textContent = `#${pr.number} - ${pr.title}`;
+                repoDiv.appendChild(element);
+            }
+            container.appendChild(repoDiv);
+        }
     }
 
     repeatedly(renderPRs);
