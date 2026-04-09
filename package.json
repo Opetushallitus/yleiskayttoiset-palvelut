@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "@aws-sdk/client-cloudwatch": "^3.777.0",
-    "@aws-sdk/client-iam": "^3.515.0",
-    "@aws-sdk/client-ssm": "^3.750.0",
-    "@aws-sdk/client-sts": "^3.515.0",
+    "@aws-sdk/client-cloudwatch": "^3.1027.0",
+    "@aws-sdk/client-iam": "^3.1027.0",
+    "@aws-sdk/client-ssm": "^3.1027.0",
+    "@aws-sdk/client-sts": "^3.1027.0",
     "@types/node": "24.10.4",
     "aws-cdk": "2.1034.0",
     "aws-cdk-lib": "2.189.1",
