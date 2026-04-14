@@ -6,9 +6,6 @@ AWS.config.update({
 
 async function fetchRadiatorData() {
     const yleiskayttoisetCredentials = AWS.config.credentials
-    const tiedotuspalveluCredentials = new AWS.ChainableTemporaryCredentials({
-        params: {RoleArn: 'arn:aws:iam::114750942703:role/RadiatorReader'}
-    })
     const palveluvaylaCredentials = new AWS.ChainableTemporaryCredentials({
         params: {RoleArn: 'arn:aws:iam::414665903273:role/RadiatorReader'}
     })
@@ -41,18 +38,6 @@ async function fetchRadiatorData() {
             dev: mkEnv('arn:aws:iam::058264235340:role/RadiatorReader', 'AdministratorAccess'),
             qa: mkEnv('arn:aws:iam::730335317715:role/RadiatorReader', 'AdministratorAccess'),
             prod: mkEnv('arn:aws:iam::767397734142:role/RadiatorReader', 'AdministratorAccess'),
-        }
-    }
-    const tiedotuspalvelu = {
-        accountName: 'tiedotuspalvelu',
-        accountId: await getAccountId(tiedotuspalveluCredentials),
-        adminRole: 'AdministratorAccess',
-        codepipeline: new AWS.CodePipeline({credentials: tiedotuspalveluCredentials}),
-        environments: {
-            hahtuva: mkEnv('arn:aws:iam::406207086056:role/RadiatorReader', 'AdministratorAccess'),
-            dev: mkEnv('arn:aws:iam::854666667960:role/RadiatorReader', 'AdministratorAccess'),
-            qa: mkEnv('arn:aws:iam::334455667377:role/RadiatorReader', 'AdministratorAccess'),
-            prod: mkEnv('arn:aws:iam::321683294345:role/RadiatorReader', 'AdministratorAccess'),
         }
     }
     const organisaatio = {
@@ -103,7 +88,7 @@ async function fetchRadiatorData() {
         }
     }
 
-    const accounts = [yleiskayttoisetPalvelut, tiedotuspalvelu, organisaatio, koodisto, viestinvalitys, palveluvayla]
+    const accounts = [yleiskayttoisetPalvelut, organisaatio, koodisto, viestinvalitys, palveluvayla]
     return {accounts: await Promise.all(accounts.map(fetchAccountState))}
 }
 

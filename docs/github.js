@@ -9,7 +9,6 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/yleiskayttoiset-palvelut": [],
     "Opetushallitus/otuva": [],
     "Opetushallitus/viestinvalityspalvelu": [],
-    "Opetushallitus/tiedotuspalvelu": [],
 };
 const GITHUB_REPOS = Object.keys(GITHUB_REPO_INCUBATOR_CHECKS)
 
