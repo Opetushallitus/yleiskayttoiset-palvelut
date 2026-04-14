@@ -47,22 +47,6 @@ class AlarmStack extends cdk.Stack {
       actions: ["cloudwatch:DescribeAlarms"],
       resources: ["*"],
     }))
-
-    const radiatorUser = new iam.User(this, "RadiatorReaderUser", {
-      userName: "radiator-reader",
-    })
-
-    radiatorUser.addToPolicy(new iam.PolicyStatement({
-      sid: "AllowAssumeTiedotuspalveluRadiatorReaderRole",
-      effect: iam.Effect.ALLOW,
-      actions: ["sts:AssumeRole"],
-      resources: [
-        "arn:aws:iam::406207086056:role/RadiatorReader",
-        "arn:aws:iam::854666667960:role/RadiatorReader",
-        "arn:aws:iam::334455667377:role/RadiatorReader",
-        "arn:aws:iam::321683294345:role/RadiatorReader"
-      ]
-    }))
   }
 
   createAlarmTopic() {
