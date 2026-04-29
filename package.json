@@ -9,6 +9,6 @@
     "aws-cdk-lib": "2.251.0",
     "constructs": "10.6.0",
     "ts-node": "10.9.2",
-    "typescript": "5.9.3"
+    "typescript": "6.0.3"
   }
 }
