@@ -1,7 +1,6 @@
 const UPDATE_INTERVAL = 10 * 1000
 
 const GITHUB_REPO_INCUBATOR_CHECKS = {
-    "Opetushallitus/java-utils": [],
     "Opetushallitus/koodisto": [],
     "Opetushallitus/oppijanumerorekisteri": ["SonarCloud Code Analysis"],
     "Opetushallitus/organisaatio": [],
@@ -10,6 +9,7 @@ const GITHUB_REPO_INCUBATOR_CHECKS = {
     "Opetushallitus/otuva": [],
     "Opetushallitus/viestinvalityspalvelu": [],
     "Opetushallitus/tiedotuspalvelu": [],
+    "Opetushallitus/java-utils": [],
 };
 const GITHUB_REPOS = Object.keys(GITHUB_REPO_INCUBATOR_CHECKS)
 
