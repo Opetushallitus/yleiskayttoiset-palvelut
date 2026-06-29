@@ -20,6 +20,8 @@ import {DnsStack} from "./dns";
 import * as clientssm from "@aws-sdk/client-ssm";
 import * as waf from "./waf";
 
+const TRIVY_BASIC_AUTH_HASH_KEY = "authorization-sha256";
+
 class CdkAppUtil extends cdk.App {
   constructor(props: cdk.AppProps & { allowedIps: string[], allowedIpv6s: string[] }) {
     super(props);
@@ -132,6 +134,16 @@ class TrivyRunnerStack extends cdk.Stack {
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, "OriginAccessIdentity")
     bucket.grantRead(originAccessIdentity)
 
+    const basicAuthKeyValueStore = new cloudfront.KeyValueStore(this, "BasicAuthKeyValueStore", {
+      keyValueStoreName: "trivy-basic-auth",
+      comment: `Populate ${TRIVY_BASIC_AUTH_HASH_KEY} out-of-band with the SHA-256 hash of the expected Authorization header.`,
+    });
+    const basicAuthFunction = new cloudfront.Function(this, "BasicAuthFunction", {
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      keyValueStore: basicAuthKeyValueStore,
+      code: cloudfront.FunctionCode.fromInline(createBasicAuthFunctionCode(TRIVY_BASIC_AUTH_HASH_KEY)),
+    });
+
     const wafStack = new waf.WafStack(this, "Waf", {
       allowedIps,
       allowedIpv6s,
@@ -144,11 +156,18 @@ class TrivyRunnerStack extends cdk.Stack {
       certificate: cert,
       defaultBehavior: {
         origin: new cloudfront_origins.S3Origin(bucket, { originAccessIdentity }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: new cloudfront.CachePolicy(this, "CachePolicy", {
           defaultTtl: cdk.Duration.seconds(0),
           minTtl: cdk.Duration.seconds(0),
           maxTtl: cdk.Duration.seconds(0),
         }),
+        functionAssociations: [
+          {
+            function: basicAuthFunction,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       webAclId: wafStack.webAcl.attrArn,
     })
@@ -384,6 +403,83 @@ class ContinousDeploymentPipelineStack extends cdk.Stack {
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function createBasicAuthFunctionCode(authorizationHashKey: string) {
+  return `
+import cf from "cloudfront";
+
+var crypto = require("crypto");
+var kvsHandle = cf.kvs();
+var AUTHORIZATION_HASH_KEY = ${JSON.stringify(authorizationHashKey)};
+
+async function handler(event) {
+  var request = event.request;
+  var authorization = request.headers.authorization && request.headers.authorization.value;
+
+  if (!authorization) {
+    return unauthorizedResponse();
+  }
+
+  var expectedHash;
+
+  try {
+    expectedHash = await kvsHandle.get(AUTHORIZATION_HASH_KEY, { format: "string" });
+    expectedHash = expectedHash.trim().toLowerCase();
+  } catch (error) {
+    console.log("Failed to read basic auth hash from CloudFront KeyValueStore");
+    return internalServerErrorResponse();
+  }
+
+  if (constantTimeEquals(sha256(authorization), expectedHash)) {
+    return request;
+  }
+
+  return unauthorizedResponse();
+}
+
+function sha256(value) {
+  return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function constantTimeEquals(actual, expected) {
+  if (!actual || !expected || actual.length !== expected.length) {
+    return false;
+  }
+
+  var mismatch = 0;
+  for (var i = 0; i < actual.length; i++) {
+    mismatch |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+
+  return mismatch === 0;
+}
+
+function unauthorizedResponse() {
+  return {
+    statusCode: 401,
+    statusDescription: "Unauthorized",
+    headers: {
+      "cache-control": { value: "no-store" },
+      "content-type": { value: "text/plain; charset=utf-8" },
+      "www-authenticate": { value: "Basic realm=\\"Trivy reports\\", charset=\\"UTF-8\\"" },
+    },
+    body: "Unauthorized",
+  };
+}
+
+function internalServerErrorResponse() {
+  return {
+    statusCode: 500,
+    statusDescription: "Internal Server Error",
+    headers: {
+      "cache-control": { value: "no-store" },
+      "content-type": { value: "text/plain; charset=utf-8" },
+    },
+    body: "Internal Server Error",
+  };
+}
+`;
 }
 
 async function getAllowedIPs() {
