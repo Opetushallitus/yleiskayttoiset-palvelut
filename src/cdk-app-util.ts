@@ -17,13 +17,11 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import {BucketAccessControl} from "aws-cdk-lib/aws-s3";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import {DnsStack} from "./dns";
-import * as clientssm from "@aws-sdk/client-ssm";
-import * as waf from "./waf";
 
 const TRIVY_BASIC_AUTH_HASH_KEY = "authorization-sha256";
 
 class CdkAppUtil extends cdk.App {
-  constructor(props: cdk.AppProps & { allowedIps: string[], allowedIpv6s: string[] }) {
+  constructor(props?: cdk.AppProps) {
     super(props);
 
     const env = {
@@ -34,16 +32,12 @@ class CdkAppUtil extends cdk.App {
     new ContinousDeploymentStack(this, "ContinuousDeploymentStack", {
       env,
       hostedZone,
-      allowedIps: props.allowedIps,
-      allowedIpv6s: props.allowedIpv6s,
     });
   }
 }
 
 type ContinousDeploymentStackProps = cdk.StackProps & {
   hostedZone: route53.IHostedZone,
-  allowedIps: string[],
-  allowedIpv6s: string[],
 }
 class ContinousDeploymentStack extends cdk.Stack {
   constructor(scope: constructs.Construct, id: string, props: ContinousDeploymentStackProps) {
@@ -66,8 +60,6 @@ class ContinousDeploymentStack extends cdk.Stack {
       "TrivyRunnerStack",
       connection,
       props.hostedZone,
-      props.allowedIps,
-      props.allowedIpv6s,
       props
     );
 
@@ -112,8 +104,6 @@ class TrivyRunnerStack extends cdk.Stack {
     id: string,
     connection: codestarconnections.CfnConnection,
     hostedZone: route53.IHostedZone,
-    allowedIps: string[],
-    allowedIpv6s: string[],
     props?: cdk.StackProps,
   ) {
     super(scope, id, {
@@ -144,12 +134,6 @@ class TrivyRunnerStack extends cdk.Stack {
       code: cloudfront.FunctionCode.fromInline(createBasicAuthFunctionCode(TRIVY_BASIC_AUTH_HASH_KEY)),
     });
 
-    const wafStack = new waf.WafStack(this, "Waf", {
-      allowedIps,
-      allowedIpv6s,
-      ...props
-    });
-
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultRootObject: "kaikki.html",
       domainNames: [domainName],
@@ -169,7 +153,6 @@ class TrivyRunnerStack extends cdk.Stack {
           },
         ],
       },
-      webAclId: wafStack.webAcl.attrArn,
     })
     new route53.ARecord(this, "CloudFrontDnsRecord", {
       zone: hostedZone,
@@ -482,27 +465,5 @@ function internalServerErrorResponse() {
 `;
 }
 
-async function getAllowedIPs() {
-  const ssmClient = new clientssm.SSMClient();
-  const command = new clientssm.GetParameterCommand({
-    Name: "/trivy/allowed-ips",
-  });
-  const response = await ssmClient.send(command);
-  const ipGroups = JSON.parse(response.Parameter!.Value!) as Record<string, string[]>;
-  return  Object.values(ipGroups).flat();
-}
-
-async function getAllowedIPV6s() {
-  const ssmClient = new clientssm.SSMClient();
-  const command = new clientssm.GetParameterCommand({
-    Name: "/trivy/allowed-ipv6s",
-  });
-  const response = await ssmClient.send(command);
-  const ipGroups = JSON.parse(response.Parameter!.Value!) as Record<string, string[]>;
-  return  Object.values(ipGroups).flat();
-}
-
-Promise.all([getAllowedIPs(), getAllowedIPV6s()]).then(([ips, ipv6s]) => {
-  const app = new CdkAppUtil({allowedIps: ips, allowedIpv6s: ipv6s});
-  app.synth();
-});
+const app = new CdkAppUtil();
+app.synth();
