@@ -3,3 +3,7 @@ node_modules
 cdk.out
 .package-lock.json.checksum
 .idea
+.Identifier
+.csr
+.key
+.lego/
