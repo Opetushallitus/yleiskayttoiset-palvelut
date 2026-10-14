@@ -102,6 +102,7 @@ class VpcStack extends cdk.Stack {
     return new ec2.BastionHostLinux(this, "BastionHost", {
       instanceName: "bastion-host",
       vpc,
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
     });
   }
 
